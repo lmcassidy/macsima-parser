@@ -175,6 +175,31 @@ def test_parse_helpers_with_missing_data():
     assert mp.parse_run_cycles(empty) == []
 
 
+@pytest.mark.parametrize("input_data, expected_output", [
+    (
+        [{'shape': {'Data': '{"Height":10,"Width":20}'}}],
+        [{'Height': 10, 'Width': 20}]
+    ),
+    (
+        [{'shape': {'Data': '{"Height":5.5,"Width":3.3}'}}],
+        [{'Height': 5.5, 'Width': 3.3}]
+    ),
+    (
+        [{'shape': {'Data': '{}'}}],
+        [{'Height': None, 'Width': None}]
+    ),
+    (
+        [{'shape': {'Data': 'invalid json'}}],
+        [{'Height': None, 'Width': None}]
+    ),
+    (
+        [{}],
+        [{'Height': None, 'Width': None}]
+    )
+])
+def test_extract_roi_dimensions(input_data, expected_output):
+    assert mp.extract_roi_dimensions(input_data) == expected_output
+
 # --------------------------------------------------
 # end‑to‑end: main()
 # --------------------------------------------------

@@ -26,7 +26,21 @@ def parse_experiment_level(data):
     """Extract top-level experiment info, ROI, sample, etc."""
     experiments = data.get('experiments', [])
     if not experiments:
-        return {}
+        return {}, [], []
+    
+def extract_roi_dimensions(rois):
+    dimensions = []
+    for roi in rois:
+        try:
+            shape_data_str = roi.get('shape', {}).get('Data', '{}')
+            shape_data = json.loads(shape_data_str)
+            height = shape_data.get('Height')
+            width = shape_data.get('Width')
+            dimensions.append({'Height': height, 'Width': width})
+        except (json.JSONDecodeError, TypeError) as e:
+            dimensions.append({'Height': None, 'Width': None})
+    return dimensions
+
 
     exp_data = experiments[0]  # Usually one experiment, or take the first
     exp_name = exp_data.get('name', 'N/A')
