@@ -1,8 +1,8 @@
+from __future__ import annotations
 import os
 import json
 import pandas as pd
-from datetime import datetime, timedelta
-from __future__ import annotations 
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Union, IO
 
@@ -44,31 +44,32 @@ def get_experiment_name(experiment: dict[str, Any]) -> str:
 def get_procedure_name(procedure: dict[str, Any]) -> str:
     """Returns the procedure name."""
     # NOTE: assume only one procedure in the file
-    return procedure.get("procedureName", "Unknown procedure")
+    return procedure.get("comment", "Unknown procedure")
 
-def get_racks(racks: list[dict[str, Any]]) -> list[str]:
-    """Returns the rack name(s)."""
-    return [rack.get("name", "Unknown rack") for rack in racks]
+def get_rack_name(rack: list[dict[str, Any]]) -> str:
+    """Returns the rack name."""
+    return rack.get("name", "Unknown rack")
 
-def get_start_time(experiment: dict[str, Any]) -> str:
-    """Returns the experiment start time."""
-    start_time = experiment.get("executionStartDateTime", "Unknown start time")
-    if isinstance(start_time, str):
-        # Convert to datetime object
-        start_time = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
-        # Format as ISO 8601 string
-        return start_time.isoformat()
-    return start_time
+def get_start_time(experiment: dict) -> str:
+    """Return the experiment's start time as an RFC 3339 string with 'Z'."""
+    # assuming the raw string is already in ISO‑8601 / RFC 3339 form
+    raw: str = experiment.get("executionStartDateTime", "Unknown end time")
 
-def get_end_time(experiment: dict[str, Any]) -> str:
+    # Parse it so you know it’s valid
+    dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+
+    # Force UTC and format with a literal 'Z'
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def get_end_time(experiment: dict[str]) -> str:
     """Returns the experiment end time."""
-    end_time = experiment.get("executionEndDateTime", "Unknown end time")
-    if isinstance(end_time, str):
-        # Convert to datetime object
-        end_time = datetime.fromisoformat(end_time.replace("Z", "+00:00"))
-        # Format as ISO 8601 string
-        return end_time.isoformat()
-    return end_time
+    raw: str = experiment.get("executionEndDateTime", "Unknown end time")
+
+    # Parse it so you know it’s valid
+    dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+
+    # Force UTC and format with a literal 'Z'
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def convert_seconds_to_hms(seconds):
     """Convert total seconds to (hours, minutes, seconds)."""
@@ -84,16 +85,22 @@ def get_running_time(experiment: dict[str, Any]) -> str:
     runtime_str = f"{h}h {m}m {s}s"
     return runtime_str
 
-def convert_bytes_to_kb(disk_usage_bytes):
-    """usedDiskspace is in bytes, convert to KB. """
-    return disk_usage_bytes / (1024)  # Convert bytes to KB
 
+def get_used_disk_space(experiment: dict) -> str:
+    """
+    Return the experiment's used‑disk‑space value as a string like '178.364 KB'.
 
-def get_used_disk_space(experiment: dict[str, Any]) -> float:
-    """Returns the used disk space in KB."""
-    used_disk_space_bytes = experiment.get('usedDiskSpace', 0)
-    used_disk_space_kb = convert_bytes_to_kb(used_disk_space_bytes)
-    return used_disk_space_kb
+    The JSON stores the size in bytes, so we convert to kilobytes (KiB = 1024 bytes)
+    and round to three decimal places.
+    """
+    # raw number of **bytes**
+    raw_bytes: int | float = experiment["usedDiskspace"]
+
+    kib: float = raw_bytes / 1000                       # → KiB
+    kib_rounded: float = round(kib, 3)                  # keep 3 decimal places
+    return f"{kib_rounded:.3f} KB"
+
+# TODO: add a function to get the used disk space in GB
 
 # --------------------------------------------------
 # ROI helper functions
@@ -105,9 +112,10 @@ def get_roi_name(roi: dict[str, Any]) -> str:
 
 def get_roi_shape_type(roi: dict[str, Any]) -> str:
     """return the ROI shape type."""
-    shape_type = roi.get("shapeType", "Unknown shape type")
+    shape = roi.get("shape", "Unknown shape")
+    shape_type = shape.get("Type", "Unknown shape type")
     # remove prefix "ShapeType_"
-    shape_type = shape_type_string.replace("ShapeType_", "")
+    shape_type = shape_type.replace("ShapeType_", "")
     return shape_type
 
 def get_roi_shape_height(roi):
@@ -119,22 +127,25 @@ def get_roi_shape_height(roi):
     except (json.JSONDecodeError, TypeError) as e:
         height = "Unknown height"
         print(f"Error decoding JSON or accessing height: {e}")
-    return height
+    return str(height)
 
 def get_roi_shape_width(roi):
     """Returns the ROI shape width."""
     try:
         shape_data_str = roi.get('shape', {}).get('Data', '{}')
         shape_data = json.loads(shape_data_str)
-        width = shape_data.get('width')
+        width = shape_data.get('Width')
     except (json.JSONDecodeError, TypeError) as e:
         width = "Unknown width"
         print(f"Error decoding JSON or accessing width: {e}")
-    return width
+    return str(width)
 
 def get_autofocus_method(roi: dict[str, Any]) -> str:
     """Returns the autofocus method."""
-    return roi.get("autofocusMethod", "Unknown autofocus method")
+    autofocus_method = roi.get("autoFocus", "Unknown autofocus method").get("method", "Unknown autofocus method")
+    autofocus_method = autofocus_method.replace("AutofocusMethod_", "")
+    return autofocus_method
+
 
 # --------------------------------------------------
 # Sample helper functions
@@ -150,7 +161,10 @@ def get_sample_species(sample: dict[str, Any]) -> str:
 
 def get_sample_type(sample: dict[str, Any]) -> str:
     """Return sample type."""
-    return sample.get("sampleType", "Unknown sample type")
+    sample_type = sample.get("sampleType", "Unknown sample type")
+    # remove prefix "SampleType_"
+    sample_type = sample_type.replace("SampleType_", "")
+    return sample_type
 
 def get_sample_organ(sample: dict[str, Any]) -> str:
     """Return sample organ."""

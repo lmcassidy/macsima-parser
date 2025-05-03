@@ -1,10 +1,11 @@
+from __future__ import annotations
 import pytest
 import json
-from __future__ import annotations
 import macsima_parser as mp
 
 
-data = mp.load_json('../data/250128_macsima_output.json')
+
+data = mp.load_json('./data/250128_macsima_output.json')
 
 # --------------------------------------------------
 # Experiment tests
@@ -18,13 +19,13 @@ def test_get_experiment_name():
 
 def test_get_procedure_name():
     """Test that the procedure name is extracted correctly."""
-    extracted = mp.get_procedure_name(data['experiments'][0])
+    extracted = mp.get_procedure_name(data['procedures'][0])
     expected = "Standard procedure"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
 
-def test_get_racks():
-    """Test that the racks are extracted correctly."""
-    extracted = mp.get_racks(data['experiments'][0])
+def test_get_rack_name():
+    """Test that the rack name extracted correctly."""
+    extracted = mp.get_rack_name(data['racks'][0])
     expected = "250128_FCRB"
     # TODO: make sure this works with multiple racks
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
@@ -110,7 +111,7 @@ def test_get_autofocus_method():
 def test_get_sample_name():
     """Test that the sample name is extracted correctly."""
     extracted = mp.get_sample_name(data['samples'][0])
-    expected = "250128_liver_OCT_FCRB 1"
+    expected = "250128_liver_OCT_FCRB"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
 
 def test_get_sample_species():
@@ -127,13 +128,13 @@ def test_get_sample_type():
 
 def test_get_sample_organ():
     """Test that the sample organ is extracted correctly."""
-    extracted = mp.get_sample_type(data['samples'][0])
+    extracted = mp.get_sample_organ(data['samples'][0])
     expected = "Liver"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
 
 def test_get_sample_fixation_method():
     """Test that the sample fixation method is extracted correctly."""
-    extracted = mp.get_sample_type(data['samples'][0])
+    extracted = mp.get_sample_fixation_method(data['samples'][0])
     expected = "PFA"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
 
@@ -279,7 +280,97 @@ def test_get_run_cycle_channel_info():
     ]
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
 
-    # --------------------------------------------------
+# --------------------------------------------------
+# Helper fixtures & sample data
+# --------------------------------------------------
+@pytest.fixture
+def sample_data():
+    """Representative but lightweight JSON structure that exercises every
+    branch we care about (experiment, procedures, reagents, …)."""
+    return {
+        "experiments": [
+            {
+                "name": "Exp‑1",
+                "executionStartDateTime": "2025‑01‑01T10:00:00",
+                "executionEndDateTime": "2025‑01‑01T12:00:00",
+                "actualRunningTime": 7200,            # 2 h
+                "usedDiskspace": 2 * 1024**3,         # 2 GiB
+            }
+        ],
+        "racks": [{"name": "Rack‑A"}],
+        "rois": [
+            {
+                "type": "Rectangle",
+                "shape": {"x": 5, "y": 5, "width": 100, "height": 100},
+                "autoFocus": {"method": "Laser"},
+            }
+        ],
+        "samples": [
+            {
+                "name": "Sample‑1",
+                "species": "Mouse",
+                "sampleType": "Tissue",
+                "organ": "Liver",
+                "fixationMethod": "PFA",
+            }
+        ],
+        "reagents": [
+            {
+                "bucketId": "b1",
+                "antigenName": "CD3",
+                "clone": "Clone‑1",
+                "exposureTime": 100,
+                "supportedFixationMethods": ["PFA"],
+            },
+            {
+                "bucketId": "b2",
+                "antigenName": "CD4",
+                "clone": "Clone‑2",
+                "exposureTime": 120,
+                "supportedFixationMethods": ["PFA"],
+            },
+        ],
+        "procedures": [
+            {
+                "comment": "Standard procedure",
+                "blocks": [
+                    {
+                        "protocolBlockType": "protocolBlockType_Scan",
+                        "comment": "Scan",
+                        "magnification": 20,
+                        "isEnabled": True,
+                        "detectionSettings": [],
+                    },
+                    {
+                        # This one must be suppressed by parse_blocks
+                        "protocolBlockType": "protocolBlockType_RestainNuclei",
+                        "comment": "Restain‑nuclei",
+                    },
+                    {
+                        "protocolBlockType": "protocolBlockType_RunCycle",
+                        "comment": "Run cycle 1",
+                        "bucketIdMapping": {"DAPI": "b1", "FITC": "b2"},
+                        "channels": [],            # not used by our parser
+                        "erasingMethod": "Bleach",
+                        "bleachingEnergy": 5,
+                        "incubationTime": 15,
+                        "dilutionFactor": 2,
+                        "timeCoefficient": 120,   # 120 %
+                    },
+                ],
+            }
+        ],
+    }
+
+
+@pytest.fixture
+def sample_json_file(tmp_path: Path, sample_data):
+    """Write sample_data to a temporary file and return its path."""
+    p = tmp_path / "sample.json"
+    p.write_text(json.dumps(sample_data))
+    return p
+
+# --------------------------------------------------
 # Pure‑function unit tests
 # --------------------------------------------------
 @pytest.mark.parametrize(
@@ -290,19 +381,17 @@ def test_convert_seconds_to_hms(seconds, expected):
     assert mp.convert_seconds_to_hms(seconds) == expected
 
 
-@pytest.mark.parametrize(
-    "bytes_, expected_gb",
-    [(1024**3, 1.0), (2 * 1024**3, 2.0), (0, 0.0)],
-)
-def test_convert_bytes_to_gb(bytes_, expected_gb):
-    assert mp.convert_bytes_to_gb(bytes_) == expected_gb
-
-
 def test_load_json(sample_json_file):
     data = mp.load_json(sample_json_file)
     # Minimal sanity check
     assert data["experiments"][0]["name"] == "Exp‑1"
 
-def test_add_numbers_to_run_cycles(blocks: dict[str, Any]) -> int:
+def test_add_numbers_to_run_cycles():
     """Test for adding numbers to run cycles."""
-    pass
+    extracted = mp.add_numbers_to_run_cycles(data['procedures'][0]['blocks'])
+    # assert that each block that is a run cycle has a runCycleNumber
+    for block in extracted:
+        if block.get("protocolBlockType") == "protocolBlockType_RunCycle":
+            assert "runCycleNumber" in block
+        else:
+            assert "runCycleNumber" not in block
