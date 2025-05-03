@@ -1,109 +1,285 @@
-import json
-import os
-import types
-from pathlib import Path
-
-import pandas as pd
 import pytest
-
-# --------------------------------------------------
-# Module under test
-# --------------------------------------------------
+import json
+from __future__ import annotations
 import macsima_parser as mp
 
 
+data = mp.load_json('../data/250128_macsima_output.json')
+
 # --------------------------------------------------
-# Helper fixtures & sample data
+# Experiment tests
 # --------------------------------------------------
-@pytest.fixture
-def sample_data():
-    """Representative but lightweight JSON structure that exercises every
-    branch we care about (experiment, procedures, reagents, …)."""
-    return {
-        "experiments": [
-            {
-                "name": "Exp‑1",
-                "executionStartDateTime": "2025‑01‑01T10:00:00",
-                "executionEndDateTime": "2025‑01‑01T12:00:00",
-                "actualRunningTime": 7200,            # 2 h
-                "usedDiskspace": 2 * 1024**3,         # 2 GiB
-            }
-        ],
-        "racks": [{"name": "Rack‑A"}],
-        "rois": [
-            {
-                "type": "Rectangle",
-                "shape": {"x": 5, "y": 5, "width": 100, "height": 100},
-                "autoFocus": {"method": "Laser"},
-            }
-        ],
-        "samples": [
-            {
-                "name": "Sample‑1",
-                "species": "Mouse",
-                "sampleType": "Tissue",
-                "organ": "Liver",
-                "fixationMethod": "PFA",
-            }
-        ],
-        "reagents": [
-            {
-                "bucketId": "b1",
-                "antigenName": "CD3",
-                "clone": "Clone‑1",
-                "exposureTime": 100,
-                "supportedFixationMethods": ["PFA"],
+
+def test_get_experiment_name():
+    """Test that the experiment name is extracted correctly."""
+    extracted = mp.get_experiment_name(data['experiments'][0])
+    expected = "250128_liver_OCT_FCRB 1"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_procedure_name():
+    """Test that the procedure name is extracted correctly."""
+    extracted = mp.get_procedure_name(data['experiments'][0])
+    expected = "Standard procedure"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_racks():
+    """Test that the racks are extracted correctly."""
+    extracted = mp.get_racks(data['experiments'][0])
+    expected = "250128_FCRB"
+    # TODO: make sure this works with multiple racks
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_start_time():
+    """Test that the start time is extracted correctly."""
+    extracted = mp.get_start_time(data['experiments'][0])
+    expected = "2025-01-28T15:53:36Z"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_end_time():
+    """Test that the end time is extracted correctly."""
+    extracted = mp.get_end_time(data['experiments'][0])
+    expected = "2025-01-29T06:43:08Z"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_running_time():
+    """Test that the running time is extracted correctly."""
+    extracted = mp.get_running_time(data['experiments'][0])
+    expected = "14h 49m 27s"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_used_disk_space():
+    """Test that the used disk space is extracted correctly."""
+    extracted = mp.get_used_disk_space(data['experiments'][0])
+    expected = "178.364 KB"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+
+# --------------------------------------------------
+# ROI tests
+# --------------------------------------------------
+
+def test_get_roi_name():
+    """Test that the ROI name is extracted correctly."""
+    extracted = mp.get_roi_name(data['rois'][0])
+    expected = "C Overview"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_roi_name(data['rois'][1])
+    expected = "ROI 1"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_roi_shape_type():
+    """Test that the ROI shape type is extracted correctly."""
+    extracted = mp.get_roi_shape_type(data['rois'][0])
+    expected = "Rectangle"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_roi_shape_type(data['rois'][1])
+    expected = "Rectangle"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_roi_shape_height():
+    """Test that the ROI shape height is extracted correctly."""
+    extracted = mp.get_roi_shape_height(data['rois'][0])
+    expected = "10"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_roi_shape_height(data['rois'][1])
+    expected = "2.350855833425806"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_roi_shape_width():
+    """Test that the ROI shape width is extracted correctly."""
+    extracted = mp.get_roi_shape_width(data['rois'][0])
+    expected = "19"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_roi_shape_width(data['rois'][1])
+    expected = "2.6345827695784165"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_autofocus_method():
+    """Test that the autofocus method is extracted correctly."""
+    extracted = mp.get_autofocus_method(data['rois'][0])
+    expected = "ImageBased"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_autofocus_method(data['rois'][1])
+    expected = "ConstantZ"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+# --------------------------------------------------
+# Sample tests
+# --------------------------------------------------
+
+def test_get_sample_name():
+    """Test that the sample name is extracted correctly."""
+    extracted = mp.get_sample_name(data['samples'][0])
+    expected = "250128_liver_OCT_FCRB 1"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_sample_species():
+    """Test that the sample species is extracted correctly."""
+    extracted = mp.get_sample_species(data['samples'][0])
+    expected = "Human"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_sample_type():
+    """Test that the sample type is extracted correctly."""
+    extracted = mp.get_sample_type(data['samples'][0])
+    expected = "Tissue"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_sample_organ():
+    """Test that the sample organ is extracted correctly."""
+    extracted = mp.get_sample_type(data['samples'][0])
+    expected = "Liver"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_sample_fixation_method():
+    """Test that the sample fixation method is extracted correctly."""
+    extracted = mp.get_sample_type(data['samples'][0])
+    expected = "PFA"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+# --------------------------------------------------
+# Procedure block tests
+# --------------------------------------------------
+
+def test_get_run_cycle_number():
+    """Test that the run cycle number is extracted correctly."""
+    extracted = mp.get_block_number(data['procedures'][0]['blocks'][5])
+    expected = "1"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_number(data['procedures'][0]['blocks'][6])
+    expected = "2"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_number(data['procedures'][0]['blocks'][7])
+    expected = "3"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_block_type():
+    """Test that the block type is extracted correctly."""
+    extracted = mp.get_block_type(data['procedures'][0]['blocks'][0])
+    expected = "Scan"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_type(data['procedures'][0]['blocks'][1])
+    expected = "DefineROIs"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_type(data['procedures'][0]['blocks'][2])
+    expected = "Scan"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_type(data['procedures'][0]['blocks'][3])
+    expected = "Erase"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_type(data['procedures'][0]['blocks'][4])
+    expected = "RestainNuclei"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_type(data['procedures'][0]['blocks'][5])
+    expected = "RunCycle"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_block_name():
+    """Test that the block name is extracted correctly."""
+    extracted = mp.get_block_name(data['procedures'][0]['blocks'][0])
+    expected = "Scan"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_name(data['procedures'][0]['blocks'][1])
+    expected = "Define ROIs"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_name(data['procedures'][0]['blocks'][2])
+    expected = "Scan"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_name(data['procedures'][0]['blocks'][3])
+    expected = "Erase"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_name(data['procedures'][0]['blocks'][4])
+    expected = "Restain Nuclei"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_name(data['procedures'][0]['blocks'][5])
+    expected = "Run Cycle"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_block_magnification():
+    """Test that the block magnification is extracted correctly."""
+    extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][0])
+    expected = "Magnification_2x"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][1])
+    expected = "Magnification_20x"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][2])
+    expected = "N/A"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][3])
+    expected = "N/A"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][4])
+    expected = "N/A"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][5])
+    expected = "N/A"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_erase_bleaching_energy():
+    """Test that the bleaching energy per channel for erase block is extracted correctly."""
+    extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][3])
+    expected = [{"Channel": "FITC", "bleachingEnergy": 1980}, { "Channel": "PE", "bleachingEnergy": 840,}, {"Channel": "APC", "bleachingEnergy": 780,}]
+    # TODO: make sure data types are defined
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+def test_get_run_cycle_channel_info():
+    """Test that the run cycle channel info is extracted correctly."""
+    extracted = mp.get_run_cycle_channel_info(data['procedures'][0]['blocks'][5])
+    expected = [
+        {
+            "Channel": "DAPI",
+            "ChannelInfo": {}
+        },
+        {
+            "Channel": "FITC",
+            "ChannelInfo": {
+                "Antigen": "TCR Vα7.2",
+                "Clone": "REA179",
+                "DilutionFactor" : 50,
+                "IncubationTime": 30,
+                "ReagentExposureTime": 56,
+                "ExposureCoefficient": 330,
+                "ActualExposureTime": 184.8,
+                "ErasingMethod": "Bleaching",
+                "BleachingEnergy": 400,
+                "ValidatedFor": "PFA"
             },
-            {
-                "bucketId": "b2",
-                "antigenName": "CD4",
-                "clone": "Clone‑2",
-                "exposureTime": 120,
-                "supportedFixationMethods": ["PFA"],
-            },
-        ],
-        "procedures": [
-            {
-                "comment": "Standard procedure",
-                "blocks": [
-                    {
-                        "protocolBlockType": "protocolBlockType_Scan",
-                        "comment": "Scan",
-                        "magnification": 20,
-                        "isEnabled": True,
-                        "detectionSettings": [],
-                    },
-                    {
-                        # This one must be suppressed by parse_blocks
-                        "protocolBlockType": "protocolBlockType_RestainNuclei",
-                        "comment": "Restain‑nuclei",
-                    },
-                    {
-                        "protocolBlockType": "protocolBlockType_RunCycle",
-                        "comment": "Run cycle 1",
-                        "bucketIdMapping": {"DAPI": "b1", "FITC": "b2"},
-                        "channels": [],            # not used by our parser
-                        "erasingMethod": "Bleach",
-                        "bleachingEnergy": 5,
-                        "incubationTime": 15,
-                        "dilutionFactor": 2,
-                        "timeCoefficient": 120,   # 120 %
-                    },
-                ],
-            }
-        ],
+        },
+        {
+            "Channel": "PE",
+            "ChannelInfo": {
+                "Antigen": "CD56",
+                "Clone": "AF12-7H3",
+                "DilutionFactor" : 50,
+                "IncubationTime": 30,
+                "ReagentExposureTime": 24,
+                "ExposureCoefficient": 430,
+                "ActualExposureTime": 103.2,
+                "ErasingMethod": "Bleaching",
+                "BleachingEnergy": 160,
+                "ValidatedFor": "PFA"
+            }   
+    },
+    {
+        "Channel": "APC",
+        "ChannelInfo": {
+            "Antigen": "PYGL",
+            "Clone": "N/A",
+            "DilutionFactor" : 50,
+            "IncubationTime": 30,
+            "ReagentExposureTime": 240,
+            "ExposureCoefficient": 100,
+            "ActualExposureTime": 240,
+            "ErasingMethod": "Bleaching",
+            "BleachingEnergy": 470,
+            "ValidatedFor": "PFA"
+        }
     }
+    ]
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
 
-
-@pytest.fixture
-def sample_json_file(tmp_path: Path, sample_data):
-    """Write sample_data to a temporary file and return its path."""
-    p = tmp_path / "sample.json"
-    p.write_text(json.dumps(sample_data))
-    return p
-
-
-# --------------------------------------------------
+    # --------------------------------------------------
 # Pure‑function unit tests
 # --------------------------------------------------
 @pytest.mark.parametrize(
@@ -127,83 +303,6 @@ def test_load_json(sample_json_file):
     # Minimal sanity check
     assert data["experiments"][0]["name"] == "Exp‑1"
 
-
-# --------------------------------------------------
-# Parsing helpers
-# --------------------------------------------------
-def test_parse_experiment_level(sample_data):
-    exp_dict, roi_list, samp_list = mp.parse_experiment_level(sample_data)
-
-    assert exp_dict["Experiment Name"] == "Exp‑1"
-    assert exp_dict["Running Time (h/m/s)"] == "2h 0m 0s"
-    # 2 GiB exactly
-    assert float(exp_dict["Used Disk Space (GB)"]) == pytest.approx(2.0)
-    assert roi_list and samp_list                         # not empty
-    assert roi_list[0]["Autofocus Method"] == "Laser"
-    assert samp_list[0]["Organ"] == "Liver"
-
-
-def test_parse_blocks(sample_data):
-    blocks = mp.parse_blocks(sample_data)
-    # Restain‑nuclei block should be skipped
-    assert len(blocks) == 2
-    types = {b["Block Type"] for b in blocks}
-    assert "protocolBlockType_Scan" in types
-    assert "protocolBlockType_RestainNuclei" not in types
-
-
-def test_parse_run_cycles(sample_data):
-    cycles = mp.parse_run_cycles(sample_data)
-    # One cycle × 4 canonical channels
-    assert len(cycles) == 4
-    dapi_row = next(row for row in cycles if row["Channel"] == "DAPI")
-    # 100 s base exposure × 1.20 coefficient
-    assert dapi_row["Actual Exposure (s)"] == pytest.approx(120.0)
-    # A channel not mapped to a reagent should say so
-    apc_row = next(row for row in cycles if row["Channel"] == "APC")
-    assert apc_row["Antigen"] == "Not in this cycle"
-
-
-def test_parse_helpers_with_missing_data():
-    """Empty / degenerate JSON should not break the helpers."""
-    empty = {}
-    exp_dict, roi_list, samp_list = mp.parse_experiment_level(empty)
-    assert exp_dict == {}
-    assert roi_list == []
-    assert samp_list == []
-    assert mp.parse_blocks(empty) == []
-    assert mp.parse_run_cycles(empty) == []
-
-
-@pytest.mark.parametrize("input_data, expected_output", [
-    (
-        [{'shape': {'Data': '{"Height":10,"Width":20}'}}],
-        [{'Height': 10, 'Width': 20}]
-    ),
-    (
-        [{'shape': {'Data': '{"Height":5.5,"Width":3.3}'}}],
-        [{'Height': 5.5, 'Width': 3.3}]
-    ),
-    (
-        [{'shape': {'Data': '{}'}}],
-        [{'Height': None, 'Width': None}]
-    ),
-    (
-        [{'shape': {'Data': 'invalid json'}}],
-        [{'Height': None, 'Width': None}]
-    ),
-    (
-        [{}],
-        [{'Height': None, 'Width': None}]
-    )
-])
-def test_extract_roi_dimensions(input_data, expected_output):
-    assert mp.extract_roi_dimensions(input_data) == expected_output
-
-# --------------------------------------------------
-# end‑to‑end: main()
-# --------------------------------------------------
-def test_main_creates_excel(sample_json_file, tmp_path):
-    output_file = tmp_path / "report.xlsx"
-    mp.main(sample_json_file, output_file)
-    assert output_file.exists()
+def test_add_numbers_to_run_cycles(blocks: dict[str, Any]) -> int:
+    """Test for adding numbers to run cycles."""
+    pass
