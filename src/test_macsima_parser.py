@@ -144,13 +144,13 @@ def test_get_sample_fixation_method():
 
 def test_get_run_cycle_number():
     """Test that the run cycle number is extracted correctly."""
-    extracted = mp.get_block_number(data['procedures'][0]['blocks'][5])
+    extracted = mp.get_run_cycle_number(data['procedures'][0]['blocks'][5])
     expected = "1"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
-    extracted = mp.get_block_number(data['procedures'][0]['blocks'][6])
+    extracted = mp.get_run_cycle_number(data['procedures'][0]['blocks'][6])
     expected = "2"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
-    extracted = mp.get_block_number(data['procedures'][0]['blocks'][7])
+    extracted = mp.get_run_cycle_number(data['procedures'][0]['blocks'][7])
     expected = "3"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
 

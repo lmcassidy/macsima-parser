@@ -212,10 +212,75 @@ def get_run_cycle_channel_info(block: dict[str, Any]) -> str:
     return block.get("channels", "Unknown channel info")
     
 
-    if __name__ == "__main__":
-        data = load_json('../data/250128_macsima_output.json')
-        experiements = data['experiments']
-        racks = data['racks']
-        rois = data['rois']
-        samples = data['samples']
-        procedures = data['procedures']
+if __name__ == "__main__":
+    data = load_json('./data/250128_macsima_output.json')
+    experiements = data['experiments']
+    racks = data['racks']
+    rois = data['rois']
+    samples = data['samples']
+    procedures = data['procedures']
+
+    for experiment in experiements:
+        experiment_name = get_experiment_name(experiment)
+        start_time = get_start_time(experiment)
+        end_time = get_end_time(experiment)
+        used_disk_space = get_used_disk_space(experiment)
+        running_time = get_running_time(experiment)
+
+        print(f"Experiment Name: {experiment_name}")
+        print(f"Start Time: {start_time}")
+        print(f"End Time: {end_time}")
+        print(f"Used Disk Space: {used_disk_space}")
+        print(f"Running Time: {running_time}")
+
+    for rack in racks:
+        rack_name = get_rack_name(rack)
+        print(f"Rack Name: {rack_name}")
+
+    for roi in rois:
+        roi_name = get_roi_name(roi)
+        roi_shape_type = get_roi_shape_type(roi)
+        roi_shape_height = get_roi_shape_height(roi)
+        roi_shape_width = get_roi_shape_width(roi)
+        autofocus_method = get_autofocus_method(roi)
+
+        print(f"ROI Name: {roi_name}")
+        print(f"ROI Shape Type: {roi_shape_type}")
+        print(f"ROI Shape Height: {roi_shape_height}")
+        print(f"ROI Shape Width: {roi_shape_width}")
+        print(f"Autofocus Method: {autofocus_method}")
+
+    for sample in samples:
+        sample_name = get_sample_name(sample)
+        sample_species = get_sample_species(sample)
+        sample_type = get_sample_type(sample)
+        sample_organ = get_sample_organ(sample)
+        sample_fixation_method = get_sample_fixation_method(sample)
+
+        print(f"Sample Name: {sample_name}")
+        print(f"Sample Species: {sample_species}")
+        print(f"Sample Type: {sample_type}")
+        print(f"Sample Organ: {sample_organ}")
+        print(f"Sample Fixation Method: {sample_fixation_method}")
+
+    for procedure in procedures:
+        procedure_name = get_procedure_name(procedure)
+        print(f"Procedure Name: {procedure_name}")
+        blocks = procedure.get("blocks", [])
+        # Add run cycle number to each block
+        add_numbers_to_run_cycles(blocks)
+        for block in blocks:
+            block_name = get_block_name(block)
+            block_type = get_block_type(block)
+            block_magnification = get_block_magnification(block)
+            erase_bleaching_energy = get_erase_bleaching_energy(block)
+            run_cycle_channel_info = get_run_cycle_channel_info(block)
+
+
+            print(f"Block Name: {block_name}")
+            print(f"Block Type: {block_type}")
+            print(f"Block Magnification: {block_magnification}")
+            print(f"Erase Bleaching Energy: {erase_bleaching_energy}")
+            print(f"Run Cycle Channel Info: {run_cycle_channel_info}")
+            run_cycle_number = get_run_cycle_number(block)
+            print(f"Run Cycle Number: {run_cycle_number}")

@@ -17,6 +17,7 @@
 
 | Excel column       | JSON path / rule           | Notes                       |
 | ------------------ | -------------------------- | --------------------------- |
+| `ROI Name`         | `rois[*].name`             |                             |
 | `ROI Type`         | `rois[*].shape.Type`       | strip `"ShapeType_"` prefix |
 | `ROI Dimensions`   | `data['rois'][*]['shape']['Data']`| extract_roi_dimensions(data['rois'])
 | `Autofocus Method` | `rois[*].autoFocus.method` | strip `"AutofocusMethod_"`  |
@@ -40,11 +41,11 @@
 | Excel column            | JSON path / rule                                          | Notes                                         |
 | ----------------------- | --------------------------------------------------------- | --------------------------------------------- |
 | `Block #`               | order in `procedures[0].blocks` (1‑based)                 | after filtering                               |
-| `Block Type`            | `block.blockType` → strip prefix                          | e.g. `Scan`, `Erase`                          |
-| `Block Name`            | `block.comment ?? block.name`                             | –                                             |
+| `Block Type`            | `block.blockType` → strip prefix    ProtocolBlockType_                      | e.g. `Scan`, `Erase`                          |
+| `Block Name`            | `block.name`                             | –                                             |
 | `Magnification`         | `block.magnification`                                     | “N/A” if missing                              |
 | `Bleaching Energy (KJ)` | `block.photos.*.bleachingEnergy` (Erase only); else blank | multiple channels – join “DAPI:0; FITC:1980…” |
-| `Is Enabled`            | `block.isEnabled`                                         | boolean                                       |
+                            |
 
 > **Filter rules:**
 > • Skip blocks of type `ProtocolBlockType_RestainNuclei` (saved for run‑cycle injection).
@@ -82,7 +83,51 @@
 
 
 
-Note
+| From → To                                                          | Relationship | Purpose                                               |
+| ------------------------------------------------------------------ | ------------ | ----------------------------------------------------- |
+| `experiments.sampleRackIds` → `racks.id`                           | **1 : many** | which rack(s) were run                                |
+| `experiments.wellProtocolLinks` → (`wellInstanceId`, `protocolId`) | **many : 1** | per‑well protocol selection                           |
+| `procedures.blocks[].bucketId` → `reagents.id`                     | **many : 1** | marry a channel in a block to a concrete antibody/dye |
+| `racks.wells.regionOfInterestIds` → `rois.id`                      | **many : 1** | which ROI polygons belong to that well                |
+| `racks.wells.sampleId` → `samples.id`                              | **1 : 1**    | tissue slice that sits in the well                    |
 
-The slides/racks are scanned in alphabetical order. In the json file, in the "racks" heading there is "orderNumber" which is 1, 2, etc. based on the order the slide was scanned in (the first slide scanned is called 1, the second is called 2, etc.). And directly under "orderNumber" is "name". "name" gives the name we have given to the sample, eg Liver HF189 or whatever. In the "racks" tabs it would be important to link the order number with the name, as in list them in a row together so we know which slide was scanned when. 
+
+ROOT
+├── experiments[ ]        ← 1 per run
+│     ├─ sampleRackIds[*] ─┐
+│     ├─ wellInstanceIds[*]│
+│     └─ wellProtocolLinks ┘      (join, see “racks” + “procedures”)
+│
+├── procedures[ ]         ← protocol executed in the run
+│     ├─ comment    (“Standard procedure”)
+│     ├─ reagents[ ]      ← **bucket catalogue for this protocol**
+│     └─ blocks[ ]  ↳ ordered workflow
+│           ├─ ProtocolBlockType_Scan
+│           │     └─ reagents.DetectionChannel_n
+│           ├─ ProtocolBlockType_DefineROIs
+│           ├─ ProtocolBlockType_Erase
+│           │     └─ photos.DetectionChannel_n
+│           ├─ ProtocolBlockType_RestainNuclei
+│           └─ ProtocolBlockType_RunCycle
+│                 └─ reagents.DetectionChannel_n
+│                       • bucketId  →  look‑up in **root.reagents** (master list)
+│
+├── racks[ ]              ← physical slide frame(s)
+│     ├─ wellInfos[ ]     ← static well layout
+│     └─ wells[ ]
+│           • procedureId   → the **procedure** used for this well
+│           • regionOfInterestIds → **rois**
+│           • sampleId          → **samples**
+│
+├── reagents[ ]           ← **master antibody/dye list** (global catalogue)
+│     id matches procedure.blocks.*.bucketId
+│
+├── rois[ ]               ← polygons placed on a well
+│     • experimentId      ↔ parent experiment
+│     • shape.Data        (stringified JSON of Height / Width …)
+│     • autoFocus.method
+│
+└── samples[ ]            ← biological samples
+      id referenced by racks.wells[*].sampleId
+
 
