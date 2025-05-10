@@ -232,9 +232,6 @@ def test_get_block_magnification():
 
 def test_get_erase_bleaching_energy():
     """Test that the bleaching energy per channel for erase block is extracted correctly."""
-    import pprint
-    block = data['procedures'][0]['blocks'][3]
-    pprint.pprint(block) 
     extracted = mp.get_erase_bleaching_energy(data['procedures'][0]['blocks'][3])
     expected = [{"Channel": "FITC", "bleachingEnergy": 1980}, { "Channel": "PE", "bleachingEnergy": 840,}, {"Channel": "APC", "bleachingEnergy": 780,}]
     # TODO: make sure data types are defined
@@ -243,6 +240,9 @@ def test_get_erase_bleaching_energy():
 def test_get_run_cycle_channel_info():
     """Test that the run cycle channel info is extracted correctly."""
     extracted = mp.get_run_cycle_channel_info(data['procedures'][0]['blocks'][5])
+    import pprint
+    pprint.pprint(data['procedures'][0]['blocks'][5]['reagents'])
+
     expected = [
         {
             "Channel": "DAPI",

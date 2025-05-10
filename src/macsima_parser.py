@@ -4,7 +4,7 @@ import json
 import pandas as pd
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Union, IO
+from typing import Any, Union, IO, Dict, Tuple, Optional, Iterable
 import logging
 
 # Basic configuration
@@ -245,10 +245,116 @@ def get_erase_bleaching_energy(block: dict[str, Any]) -> list[dict[str, Any]] | 
 
 
     
-def get_run_cycle_channel_info(block: dict[str, Any]) -> str:
-    """Return the run cycle channel info."""
-    return block.get("channels", "Unknown channel info")
-    
+def get_run_cycle_channel_info(block: dict[str, Any]) -> list[dict[str, Any]] | str:
+    if block.get("blockType") != "ProtocolBlockType_RunCycle":
+        return "Unknown channel info"
+
+    reagents = block.get("reagents", {})
+    if not reagents:
+        return "Unknown channel info"
+
+    results = []
+    dapi_added = False
+
+    for channel_data in reagents.values():
+        fluoro_type = channel_data.get("fluorochromeType", "FluorochromeType_None")
+        label = fluoro_type.split("_")[-1]
+
+        if fluoro_type == "FluorochromeType_None":
+            if not dapi_added:
+                results.append({"Channel": "DAPI", "ChannelInfo": {}})
+                dapi_added = True
+            continue
+
+        exposure_info = channel_data.get("exposureTimeAndCoefficient", {})
+        exposure_time = exposure_info.get("exposureTime", {})
+        linearity_mode = exposure_time.get("linearityMode", 0)
+        time_coefficient = exposure_info.get("timeCoefficient", 0)
+
+        actual_exposure_time = linearity_mode * time_coefficient / 100.0 if time_coefficient else 0
+
+        channel_info = {
+            "Antigen": "Unknown",  # not in data
+            "Clone": "N/A",        # not in data
+            "DilutionFactor": channel_data.get("dilutionFactor", 0),
+            "IncubationTime": channel_data.get("incubationTime", 0),
+            "ReagentExposureTime": linearity_mode,
+            "ExposureCoefficient": time_coefficient,
+            "ActualExposureTime": actual_exposure_time,
+            "ErasingMethod": channel_data.get("erasingMethod", "ErasingMethod_Default").split("_")[-1],
+            "BleachingEnergy": channel_data.get("bleachingEnergy", 0),
+            "ValidatedFor": "PFA"  # hardcoded default
+        }
+
+        results.append({
+            "Channel": label,
+            "ChannelInfo": channel_info
+        })
+
+    return results if results else "Unknown channel info"
+
+# ------------------------------------------------------------------ #
+#  Build once – then reuse
+# ------------------------------------------------------------------ #
+def build_bucket_lookup(data: dict) -> Dict[str, Dict[str, str]]:
+    """
+    Create a lookup table  bucketId  ->  {"Antigen": str, "Clone": str}
+
+    Call this *once* after loading the JSON and reuse the dictionary for all
+    subsequent look-ups (it’s fast – O(n) over the procedure reagents list).
+    """
+    bucket_to_reagent_id: Dict[str, str] = {}
+    # -- link bucketId -> reagentId.itemId (one per procedure) ----------
+    for proc in data.get("procedures", []):
+        for reagent_link in proc.get("reagents", []):
+            bucket_id = reagent_link.get("bucketId")
+            reagent_uuid = reagent_link.get("reagentId", {}).get("itemId")
+            if bucket_id and reagent_uuid:            # skip empty placeholders
+                bucket_to_reagent_id[bucket_id] = reagent_uuid
+
+    # -- build final map bucketId -> {"Antigen": ..., "Clone": ...} ----
+    reagent_catalogue: Dict[str, Dict[str, str]] = {
+        r["id"]: {"Antigen": r.get("antigen", "Unknown"),
+                  "Clone":   r.get("clone",   "N/A")}
+        for r in data.get("reagents", [])
+    }
+
+    # combine the two maps
+    return {
+        bucket_id: reagent_catalogue.get(rid, {"Antigen": "Unknown",
+                                               "Clone":   "N/A"})
+        for bucket_id, rid in bucket_to_reagent_id.items()
+    }
+
+
+# ------------------------------------------------------------------ #
+#  Query helpers
+# ------------------------------------------------------------------ #
+def get_antigen_clone_by_bucket(bucket_id: str,
+                                bucket_lookup: Dict[str, Dict[str, str]]
+                               ) -> Optional[Tuple[str, str]]:
+    """
+    Fast O(1) lookup using the pre-built dictionary.
+    Returns (antigen, clone)  or  None if the bucket is unknown.
+    """
+    info = bucket_lookup.get(bucket_id)
+    if info is None:
+        return None
+    return info["Antigen"], info["Clone"]
+
+
+def get_antigen_clone_by_reagent_id(reagent_uuid: str,
+                                    data: dict
+                                   ) -> Optional[Tuple[str, str]]:
+    """
+    Directly fetch antigen / clone when you already have the reagent UUID.
+    Scans the global reagent catalogue only once per call.
+    """
+    for reagent in data.get("reagents", []):
+        if reagent.get("id") == reagent_uuid:
+            return reagent.get("antigen", "Unknown"), reagent.get("clone", "N/A")
+    return None
+
 
 if __name__ == "__main__":
     data = load_json('./data/250128_macsima_output.json')
