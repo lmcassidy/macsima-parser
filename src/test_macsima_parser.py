@@ -155,14 +155,16 @@ def test_get_sample_fixation_method():
 
 def test_get_run_cycle_number():
     """Test that the run cycle number is extracted correctly."""
-    extracted = mp.get_run_cycle_number(data['procedures'][0]['blocks'][5])
-    expected = "1"
+    blocks = data['procedures'][0]['blocks']
+    blocks_with_run_cycle_numbers = mp.add_numbers_to_run_cycles(blocks)
+    extracted = mp.get_run_cycle_number(blocks_with_run_cycle_numbers[5])
+    expected = 1
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
-    extracted = mp.get_run_cycle_number(data['procedures'][0]['blocks'][6])
-    expected = "2"
+    extracted = mp.get_run_cycle_number(blocks_with_run_cycle_numbers[6])
+    expected = 2
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
-    extracted = mp.get_run_cycle_number(data['procedures'][0]['blocks'][7])
-    expected = "3"
+    extracted = mp.get_run_cycle_number(blocks_with_run_cycle_numbers[7])
+    expected = 3
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
 
 def test_get_block_type():
@@ -402,7 +404,6 @@ def test_add_numbers_to_run_cycles():
     extracted = mp.add_numbers_to_run_cycles(data['procedures'][0]['blocks'])
     # assert that each block that is a run cycle has a runCycleNumber
     for block in extracted:
-        logger.debug(f"block: {block}")
         if block.get("protocolBlockType") == "protocolBlockType_RunCycle":
             assert "runCycleNumber" in block
         else:

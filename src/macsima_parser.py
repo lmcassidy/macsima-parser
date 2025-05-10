@@ -9,7 +9,7 @@ import logging
 
 # Basic configuration
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
         logging.StreamHandler()  # You can add FileHandler, SMTPHandler, etc.
@@ -194,19 +194,23 @@ def get_sample_fixation_method(sample: dict[str, Any]) -> str:
 def add_numbers_to_run_cycles(blocks: dict[str, Any]) -> dict[str, Any]:
     """Add numbers to run cycles."""
     run_cycle_number = 0
-    for block in blocks:
-        if block.get("protocolBlockType") == "protocolBlockType_RunCycle":
+    updated_blocks = []
+    for i, block in enumerate(blocks):
+        if block.get("blockType") == "ProtocolBlockType_RunCycle":
             run_cycle_number += 1
+            logger.debug(f"Adding run cycle number {run_cycle_number} to block {i}")
             block["runCycleNumber"] = run_cycle_number
-    return blocks
+        updated_blocks.append(block)
+    return updated_blocks
 
 def get_run_cycle_number(block: dict[str, Any]) -> int:
     """Return the run cycle number."""
-    return block.get("runCycleNumber", 0)
+    logger.debug(f"Block keys: {block.keys()}")
+    return block.get("runCycleNumber", "Unknown run cycle number")
 
 def get_block_type(block: dict[str, Any]) -> str:
     """Return the block type."""
-    return block.get("protocolBlockType", "Unknown block type")
+    return block.get("blockType", "Unknown block type")
 
 def get_block_name(block: dict[str, Any]) -> str:
     """Return the block name."""
@@ -281,7 +285,9 @@ if __name__ == "__main__":
         print(f"Procedure Name: {procedure_name}")
         blocks = procedure.get("blocks", [])
         # Add run cycle number to each block
-        add_numbers_to_run_cycles(blocks)
+        # logger.debug(f"Blocks before adding numbers: {blocks}")
+        blocks = add_numbers_to_run_cycles(blocks)
+        # logger.debug(f"Blocks after adding numbers: {blocks}")
         for block in blocks:
             block_name = get_block_name(block)
             block_type = get_block_type(block)
