@@ -210,7 +210,11 @@ def get_run_cycle_number(block: dict[str, Any]) -> int:
 
 def get_block_type(block: dict[str, Any]) -> str:
     """Return the block type."""
-    return block.get("blockType", "Unknown block type")
+    block_type = block.get("blockType", "Unknown block type")
+    # remove prefix "ProtocolBlockType_"
+    if block_type.startswith("ProtocolBlockType_"):
+        block_type = block_type.replace("ProtocolBlockType_", "")
+    return block_type
 
 def get_block_name(block: dict[str, Any]) -> str:
     """Return the block name."""

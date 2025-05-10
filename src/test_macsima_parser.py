@@ -401,10 +401,11 @@ def test_load_json(sample_json_file):
 
 def test_add_numbers_to_run_cycles():
     """Test for adding numbers to run cycles."""
-    extracted = mp.add_numbers_to_run_cycles(data['procedures'][0]['blocks'])
+    blocks = data['procedures'][0]['blocks']
+    blocks_with_run_cycle_numbers = mp.add_numbers_to_run_cycles(blocks)
     # assert that each block that is a run cycle has a runCycleNumber
-    for block in extracted:
-        if block.get("protocolBlockType") == "protocolBlockType_RunCycle":
+    for block in blocks_with_run_cycle_numbers:
+        if block.get("blockType") == "ProtocolBlockType_RunCycle":
             assert "runCycleNumber" in block
         else:
             assert "runCycleNumber" not in block
