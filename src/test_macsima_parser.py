@@ -215,10 +215,10 @@ def test_get_block_magnification():
     expected = "Magnification_2x"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
     extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][1])
-    expected = "Magnification_20x"
+    expected = "N/A"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
     extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][2])
-    expected = "N/A"
+    expected = "Magnification_20x"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
     extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][3])
     expected = "N/A"
@@ -232,7 +232,10 @@ def test_get_block_magnification():
 
 def test_get_erase_bleaching_energy():
     """Test that the bleaching energy per channel for erase block is extracted correctly."""
-    extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][3])
+    import pprint
+    block = data['procedures'][0]['blocks'][3]
+    pprint.pprint(block) 
+    extracted = mp.get_erase_bleaching_energy(data['procedures'][0]['blocks'][3])
     expected = [{"Channel": "FITC", "bleachingEnergy": 1980}, { "Channel": "PE", "bleachingEnergy": 840,}, {"Channel": "APC", "bleachingEnergy": 780,}]
     # TODO: make sure data types are defined
     assert extracted == expected, f"Expected {expected}, but got {extracted}"

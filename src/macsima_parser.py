@@ -222,11 +222,28 @@ def get_block_name(block: dict[str, Any]) -> str:
 
 def get_block_magnification(block: dict[str, Any]) -> str:
     """Return the block magnification."""
-    return block.get("magnification", "Unknown magnification")
+    logger.debug(f"Block keys: {block.keys()}")
+    return block.get("magnification", "N/A")
 
-def get_erase_bleaching_energy(block: dict[str, Any]) -> str:   
-    """Return the erase bleaching energy."""
-    return block.get("bleachingEnergy", "Unknown bleaching energy")
+def get_erase_bleaching_energy(block: dict[str, Any]) -> list[dict[str, Any]] | str:
+    if block.get("blockType") != "ProtocolBlockType_Erase":
+        return "Unknown bleaching energy"
+    
+    results = []
+    channels = block.get("photos", {})
+    
+    for channel in channels.values():
+        fluor = channel.get("fluorochromeType")
+        energy = channel.get("bleachingEnergy")
+        enabled = channel.get("isEnabled", False)
+        
+        if enabled and fluor and fluor != "FluorochromeType_None" and energy:
+            label = fluor.split("_")[-1]  # FluorochromeType_APC → APC
+            results.append({"Channel": label, "bleachingEnergy": energy})
+    
+    return results if results else "Unknown bleaching energy"
+
+
     
 def get_run_cycle_channel_info(block: dict[str, Any]) -> str:
     """Return the run cycle channel info."""
