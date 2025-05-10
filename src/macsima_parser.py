@@ -5,6 +5,19 @@ import pandas as pd
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Union, IO
+import logging
+
+# Basic configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[
+        logging.StreamHandler()  # You can add FileHandler, SMTPHandler, etc.
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
 
 JsonFile = Union[str, Path, IO[str]]
 
@@ -178,14 +191,14 @@ def get_sample_fixation_method(sample: dict[str, Any]) -> str:
 # Procedure block functions
 # --------------------------------------------------
 
-def add_numbers_to_run_cycles(blocks: dict[str, Any]) -> int:
+def add_numbers_to_run_cycles(blocks: dict[str, Any]) -> dict[str, Any]:
     """Add numbers to run cycles."""
     run_cycle_number = 0
     for block in blocks:
         if block.get("protocolBlockType") == "protocolBlockType_RunCycle":
             run_cycle_number += 1
             block["runCycleNumber"] = run_cycle_number
-    return block
+    return blocks
 
 def get_run_cycle_number(block: dict[str, Any]) -> int:
     """Return the run cycle number."""

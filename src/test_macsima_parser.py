@@ -2,7 +2,18 @@ from __future__ import annotations
 import pytest
 import json
 import macsima_parser as mp
+import logging
 
+# Basic configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[
+        logging.StreamHandler()  # You can add FileHandler, SMTPHandler, etc.
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 
 data = mp.load_json('./data/250128_macsima_output.json')
@@ -391,6 +402,7 @@ def test_add_numbers_to_run_cycles():
     extracted = mp.add_numbers_to_run_cycles(data['procedures'][0]['blocks'])
     # assert that each block that is a run cycle has a runCycleNumber
     for block in extracted:
+        logger.debug(f"block: {block}")
         if block.get("protocolBlockType") == "protocolBlockType_RunCycle":
             assert "runCycleNumber" in block
         else:
