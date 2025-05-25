@@ -280,7 +280,7 @@ def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
             reagent   = bucket_lookup.get(bucket_id)
 
             if reagent:
-                r_exp  = reagent["ReagentExposureTime"]
+                r_exp  = reagent["exposureTime"]
                 coef   = dc["exposureTimeAndCoefficient"]["timeCoefficient"]
                 clone  = reagent["clone"] or "N/A"
 
@@ -300,38 +300,31 @@ def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
 
     return out
 
-# ------------------------------------------------------------------ #
-#  Build once – then reuse
-# ------------------------------------------------------------------ #
-def build_bucket_lookup(data: dict) -> Dict[str, Dict[str, str]]:
+def build_bucket_lookup(data: dict) -> Dict[str, Dict[str, Any]]:
     """
-    Create a lookup table  bucketId  ->  {"Antigen": str, "Clone": str}
-
-    Call this *once* after loading the JSON and reuse the dictionary for all
-    subsequent look-ups (it’s fast – O(n) over the procedure reagents list).
+    Map bucketId  ->  reagent metadata (antigen, clone, exposureTime, …)
     """
+    # 1️⃣  first map bucketId ➜ reagent UUID (comes from the procedure)
     bucket_to_reagent_id: Dict[str, str] = {}
-    # -- link bucketId -> reagentId.itemId (one per procedure) ----------
     for proc in data.get("procedures", []):
-        for reagent_link in proc.get("reagents", []):
-            bucket_id = reagent_link.get("bucketId")
-            reagent_uuid = reagent_link.get("reagentId", {}).get("itemId")
-            if bucket_id and reagent_uuid:            # skip empty placeholders
-                bucket_to_reagent_id[bucket_id] = reagent_uuid
+        for link in proc.get("reagents", []):
+            bid  = link.get("bucketId")
+            rid  = link.get("reagentId", {}).get("itemId")
+            if bid and rid:
+                bucket_to_reagent_id[bid] = rid
 
-    # -- build final map bucketId -> {"Antigen": ..., "Clone": ...} ----
-    reagent_catalogue: Dict[str, Dict[str, str]] = {
-        r["id"]: {"Antigen": r.get("antigen", "Unknown"),
-                  "Clone":   r.get("clone",   "N/A")}
+    # 2️⃣  second map reagent UUID ➜ metadata (comes from the global catalogue)
+    catalogue: Dict[str, Dict[str, Any]] = {
+        r["id"]: {
+            "antigen":      r.get("antigen",  "Unknown"),
+            "clone":        r.get("clone",    "N/A"),
+            "exposureTime": r.get("exposureTime", 0),
+            "supportedFixationMethods": r.get("supportedFixationMethods", ""),
+        }
         for r in data.get("reagents", [])
     }
 
-    # combine the two maps
-    return {
-        bucket_id: reagent_catalogue.get(rid, {"Antigen": "Unknown",
-                                               "Clone":   "N/A"})
-        for bucket_id, rid in bucket_to_reagent_id.items()
-    }
+    return {bid: catalogue.get(rid, {}) for bid, rid in bucket_to_reagent_id.items()}
 
 
 # ------------------------------------------------------------------ #
