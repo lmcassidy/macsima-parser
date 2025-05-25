@@ -242,7 +242,7 @@ def get_block_magnification(block: dict[str, Any]) -> str:
 
 def get_erase_bleaching_energy(block: dict[str, Any]) -> list[dict[str, Any]] | str:
     if block.get("blockType") != "ProtocolBlockType_Erase":
-        return "Unknown bleaching energy"
+        return "N/A"
     
     results = []
     channels = block.get("photos", {})
@@ -256,7 +256,33 @@ def get_erase_bleaching_energy(block: dict[str, Any]) -> list[dict[str, Any]] | 
             label = fluor.split("_")[-1]  # FluorochromeType_APC → APC
             results.append({"Channel": label, "bleachingEnergy": energy})
     
-    return results if results else "Unknown bleaching energy"
+    return results if results else "N/A"
+
+def get_erase_channel_info(block: dict[str, Any]) -> list[dict]:
+    """
+    Return a list like
+        [
+          {"Channel": "FITC", "ChannelInfo": {"BleachingEnergy": 1980}},
+          {"Channel": "PE",   "ChannelInfo": {"BleachingEnergy": 840}},
+          ...
+        ]
+    Only channels where *isEnabled* is true are listed.
+    """
+    out = []
+    for dc in block.get("photos", {}).values():
+        if (
+            dc.get("isEnabled") 
+            and dc.get("fluorochromeType") != "FluorochromeType_None"
+        ):
+            label = dc["fluorochromeType"].split("_")[-1]   # …_APC → APC
+            out.append(
+                {
+                    "Channel": label,
+                    "ChannelInfo": {"BleachingEnergy": dc.get("bleachingEnergy", "")},
+                }
+            )
+    return out
+
 
   
 def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
@@ -365,99 +391,115 @@ def get_antigen_clone_by_reagent_id(reagent_uuid: str,
             return reagent.get("antigen", "Unknown"), reagent.get("clone", "N/A")
     return None
 
-def process_experiment(experiment):
-    experiment_name = get_experiment_name(experiment)
-    start_time = get_start_time(experiment)
-    end_time = get_end_time(experiment)
-    used_disk_space = get_used_disk_space(experiment)
-    running_time = get_running_time(experiment)
-    print(f"Experiment Name: {experiment_name}")
-    print(f"Start Time: {start_time}")
-    print(f"End Time: {end_time}")
-    print(f"Used Disk Space: {used_disk_space}")
-    print(f"Running Time: {running_time}")
+def process_experiment(experiment: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "ExperimentName":  get_experiment_name(experiment),
+        "StartTime":       get_start_time(experiment),
+        "EndTime":         get_end_time(experiment),
+        "RunningTime":     get_running_time(experiment),
+        "UsedDiskSpace":   get_used_disk_space(experiment),
+    }
 
-def process_rois(roi):
-        roi_name = get_roi_name(roi)
-        roi_shape_type = get_roi_shape_type(roi)
-        roi_shape_height = get_roi_shape_height(roi)
-        roi_shape_width = get_roi_shape_width(roi)
-        autofocus_method = get_autofocus_method(roi)
+def process_rois(roi: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "ROIName":    get_roi_name(roi),
+        "Shape":      get_roi_shape_type(roi),
+        "Height":     get_roi_shape_height(roi),
+        "Width":      get_roi_shape_width(roi),
+        "Autofocus":  get_autofocus_method(roi),
+    }
 
-        print(f"ROI Name: {roi_name}")
-        print(f"ROI Shape Type: {roi_shape_type}")
-        print(f"ROI Shape Height: {roi_shape_height}")
-        print(f"ROI Shape Width: {roi_shape_width}")
-        print(f"Autofocus Method: {autofocus_method}")
+def process_sample(sample: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "SampleName":   get_sample_name(sample),
+        "Species":      get_sample_species(sample),
+        "Type":         get_sample_type(sample),
+        "Organ":        get_sample_organ(sample),
+        "Fixation":     get_sample_fixation_method(sample),
+    }
 
-def process_sample(sample):
-        sample_name = get_sample_name(sample)
-        sample_species = get_sample_species(sample)
-        sample_type = get_sample_type(sample)
-        sample_organ = get_sample_organ(sample)
-        sample_fixation_method = get_sample_fixation_method(sample)
+def process_block(block: dict[str, Any],
+                  bucket_lookup: dict[str, Any]) -> list[dict[str, Any]]:
+    common = {
+        "BlockName":     get_block_name(block),
+        "BlockType":     get_block_type(block),
+        "Magnification": get_block_magnification(block),
+        "RunCycleNumber": (
+            get_run_cycle_number(block) if get_block_type(block) == "RunCycle" else ""
+        ),
+    }
 
-        print(f"Sample Name: {sample_name}")
-        print(f"Sample Species: {sample_species}")
-        print(f"Sample Type: {sample_type}")
-        print(f"Sample Organ: {sample_organ}")
-        print(f"Sample Fixation Method: {sample_fixation_method}")
+    # ---------- ERASE blocks -----------------------------------
+    if common["BlockType"] == "Erase":
+        rows = []
+        for chan in get_erase_channel_info(block):
+            rows.append(
+                {
+                    **common,
+                    "Channel":         chan["Channel"],
+                    "BleachingEnergy": chan["ChannelInfo"]["BleachingEnergy"],
+                }
+            )
+        return rows                         # <- finished for Erase
 
-def process_block(block):
-    block_name = get_block_name(block)
-    block_type = get_block_type(block)
-    block_magnification = get_block_magnification(block)
-    erase_bleaching_energy = get_erase_bleaching_energy(block)
+    # ---------- Non-run-cycle  (Scan, DefineROIs, …) -------------
+    if common["BlockType"] != "RunCycle":
+        return [common]
 
-    print(f"Block Name: {block_name}")
-    print(f"Block Type: {block_type}")
-    print(f"Block Magnification: {block_magnification}")
-    print(f"Erase Bleaching Energy: {erase_bleaching_energy}")
-    if block_type == "RunCycle":
-        run_cycle_number = get_run_cycle_number(block)
-        print(f"Run Cycle Number: {run_cycle_number}")
-        run_cycle_channel_info = get_run_cycle_channel_info(block, bucket_lookup)
-        print(f"Run Cycle Channel Info: {run_cycle_channel_info}")
+    # ---------- RUN-CYCLE blocks --------------------------------
+    rows = []
+    for chan in get_run_cycle_channel_info(block, bucket_lookup):
+        cc = chan["ChannelInfo"]
+        rows.append(
+            {
+                **common,
+                "Channel":         chan["Channel"],
+                "Antigen":         cc.get("Antigen", ""),
+                "Clone":           cc.get("Clone", ""),
+                "DilutionFactor":  cc.get("DilutionFactor", ""),
+                "IncubationTime":  cc.get("IncubationTime", ""),
+                "ReagentExposure": cc.get("ReagentExposureTime", ""),
+                "Coefficient":     cc.get("ExposureCoefficient", ""),
+                "ActualExposure":  cc.get("ActualExposureTime", ""),
+                "ErasingMethod":   cc.get("ErasingMethod", ""),
+                "BleachingEnergy": cc.get("BleachingEnergy", ""),
+                "ValidatedFor":    cc.get("ValidatedFor", ""),
+            }
+        )
+    return rows
 
-def process_procedure(procedure):
-        procedure_name = get_procedure_name(procedure)
-        print(f"Procedure Name: {procedure_name}")
-        blocks = procedure.get("blocks", [])
-        # Add run cycle number to each block
-        # logger.debug(f"Blocks before adding numbers: {blocks}")
-        blocks = add_numbers_to_run_cycles(blocks)
-        # logger.debug(f"Blocks after adding numbers: {blocks}")
-        print("\n--- Blocks ---")
-        for block in blocks:
-            process_block(block)
 
 if __name__ == "__main__":
     json_path = get_input_path()
-    data = load_json(json_path)
+    logger.info(f"Loading JSON: {json_path}")
+    data          = load_json(json_path)
     bucket_lookup = build_bucket_lookup(data)
-    experiments = data['experiments']
-    racks = data['racks']
-    rois = data['rois']
-    samples = data['samples']
-    procedures = data['procedures']
 
-    print("\n--- Experiment info ---")
-    for experiment in experiments:
-        process_experiment(experiment)
+    # ---------- gather rows ------------------------------------
+    exp_rows    = [process_experiment(e) for e in data["experiments"]]
+    rack_rows   = [{"RackName": get_rack_name(r)} for r in data["racks"]]
+    roi_rows    = [process_rois(r)       for r in data["rois"]]
+    sample_rows = [process_sample(s)     for s in data["samples"]]
 
-    print("\n--- Racks ---")
-    for rack in racks:
-        rack_name = get_rack_name(rack)
-        print(f"Rack Name: {rack_name}")
+    block_rows: list[dict] = []
+    for proc in data["procedures"]:
+        # add run-cycle numbers once
+        blocks = add_numbers_to_run_cycles(proc["blocks"])
+        for b in blocks:
+            block_rows.extend(process_block(b, bucket_lookup))
 
-    print("\n--- ROIs ---")
-    for roi in rois:
-        process_rois(roi)
+    # ---------- to Excel ---------------------------------------
+    out_xlsx = json_path.with_suffix(".xlsx")
+    logger.info(f"Writing Excel report ➜ {out_xlsx}")
 
-    print("\n--- Samples ---")
-    for sample in samples:
-        process_sample(sample)
+    import pandas as pd
+    with pd.ExcelWriter(out_xlsx, engine="xlsxwriter") as xls:
+        pd.DataFrame(exp_rows   ).to_excel(xls, sheet_name="Experiment", index=False)
+        pd.DataFrame(rack_rows  ).to_excel(xls, sheet_name="Racks",      index=False)
+        pd.DataFrame(roi_rows   ).to_excel(xls, sheet_name="ROIs",       index=False)
+        pd.DataFrame(sample_rows).to_excel(xls, sheet_name="Samples",    index=False)
 
-    print("\n--- Procedures ---")
-    for procedure in procedures:
-        process_procedure(procedure)
+        # big table of all blocks & channels
+        pd.DataFrame(block_rows ).to_excel(xls, sheet_name="Blocks",     index=False)
+
+    logger.info("✅ Excel report created successfully.")
