@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import argparse
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Union, IO, Dict, Tuple, Optional
@@ -18,6 +19,22 @@ logger = logging.getLogger(__name__)
 
 
 JsonFile = Union[str, Path, IO[str]]
+
+
+def get_input_path() -> Path:
+    parser = argparse.ArgumentParser(description="MACSima JSON parser")
+    parser.add_argument("json_path", nargs="?", type=Path, help="Path to input JSON file")
+    args = parser.parse_args()
+
+    if args.json_path and args.json_path.exists():
+        return args.json_path
+
+    # fallback: prompt the user
+    path_str = input("Enter path to input JSON file: ").strip()
+    path = Path(path_str)
+    if not path.exists():
+        raise FileNotFoundError(f"No such file: {path}")
+    return path
 
 def load_json(json_file: JsonFile) -> Any:
     """
@@ -82,7 +99,7 @@ def get_end_time(experiment: dict[str]) -> str:
     # Force UTC and format with a literal 'Z'
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-def convert_seconds_to_hms(seconds):
+def convert_seconds_to_hms(seconds)-> Tuple[int, int, int]:
     """Convert total seconds to (hours, minutes, seconds)."""
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
@@ -137,7 +154,7 @@ def get_roi_shape_height(roi):
         height = shape_data.get('Height')
     except (json.JSONDecodeError, TypeError) as e:
         height = "Unknown height"
-        print(f"Error decoding JSON or accessing height: {e}")
+        logger.warning(f"Error decoding JSON or accessing height: {e}")
     return str(height)
 
 def get_roi_shape_width(roi):
@@ -148,7 +165,7 @@ def get_roi_shape_width(roi):
         width = shape_data.get('Width')
     except (json.JSONDecodeError, TypeError) as e:
         width = "Unknown width"
-        print(f"Error decoding JSON or accessing width: {e}")
+        logger.warning(f"Error decoding JSON or accessing width: {e}")
     return str(width)
 
 def get_autofocus_method(roi: dict[str, Any]) -> str:
@@ -348,45 +365,24 @@ def get_antigen_clone_by_reagent_id(reagent_uuid: str,
             return reagent.get("antigen", "Unknown"), reagent.get("clone", "N/A")
     return None
 
+def process_experiment(experiment):
+    experiment_name = get_experiment_name(experiment)
+    start_time = get_start_time(experiment)
+    end_time = get_end_time(experiment)
+    used_disk_space = get_used_disk_space(experiment)
+    running_time = get_running_time(experiment)
+    print(f"Experiment Name: {experiment_name}")
+    print(f"Start Time: {start_time}")
+    print(f"End Time: {end_time}")
+    print(f"Used Disk Space: {used_disk_space}")
+    print(f"Running Time: {running_time}")
 
-if __name__ == "__main__":
-    data = load_json('./data/Corinna - data.json')
-    bucket_lookup = build_bucket_lookup(data)
-    experiments = data['experiments']
-    racks = data['racks']
-    rois = data['rois']
-    samples = data['samples']
-    procedures = data['procedures']
-
-    print("\n--- Experiment info ---")
-
-    for experiment in experiments:
-        experiment_name = get_experiment_name(experiment)
-        start_time = get_start_time(experiment)
-        end_time = get_end_time(experiment)
-        used_disk_space = get_used_disk_space(experiment)
-        running_time = get_running_time(experiment)
-
-
-        print(f"Experiment Name: {experiment_name}")
-        print(f"Start Time: {start_time}")
-        print(f"End Time: {end_time}")
-        print(f"Used Disk Space: {used_disk_space}")
-        print(f"Running Time: {running_time}")
-
-    print("\n--- Racks ---")
-    for rack in racks:
-        rack_name = get_rack_name(rack)
-        print(f"Rack Name: {rack_name}")
-
-    print("\n--- ROIs ---")
-    for roi in rois:
+def process_rois(roi):
         roi_name = get_roi_name(roi)
         roi_shape_type = get_roi_shape_type(roi)
         roi_shape_height = get_roi_shape_height(roi)
         roi_shape_width = get_roi_shape_width(roi)
         autofocus_method = get_autofocus_method(roi)
-
 
         print(f"ROI Name: {roi_name}")
         print(f"ROI Shape Type: {roi_shape_type}")
@@ -394,9 +390,7 @@ if __name__ == "__main__":
         print(f"ROI Shape Width: {roi_shape_width}")
         print(f"Autofocus Method: {autofocus_method}")
 
-    print("\n--- Samples ---")
-
-    for sample in samples:
+def process_sample(sample):
         sample_name = get_sample_name(sample)
         sample_species = get_sample_species(sample)
         sample_type = get_sample_type(sample)
@@ -409,9 +403,23 @@ if __name__ == "__main__":
         print(f"Sample Organ: {sample_organ}")
         print(f"Sample Fixation Method: {sample_fixation_method}")
 
-    print("\n--- Procedures ---")
+def process_block(block):
+    block_name = get_block_name(block)
+    block_type = get_block_type(block)
+    block_magnification = get_block_magnification(block)
+    erase_bleaching_energy = get_erase_bleaching_energy(block)
 
-    for procedure in procedures:
+    print(f"Block Name: {block_name}")
+    print(f"Block Type: {block_type}")
+    print(f"Block Magnification: {block_magnification}")
+    print(f"Erase Bleaching Energy: {erase_bleaching_energy}")
+    if block_type == "RunCycle":
+        run_cycle_number = get_run_cycle_number(block)
+        print(f"Run Cycle Number: {run_cycle_number}")
+        run_cycle_channel_info = get_run_cycle_channel_info(block, bucket_lookup)
+        print(f"Run Cycle Channel Info: {run_cycle_channel_info}")
+
+def process_procedure(procedure):
         procedure_name = get_procedure_name(procedure)
         print(f"Procedure Name: {procedure_name}")
         blocks = procedure.get("blocks", [])
@@ -421,17 +429,35 @@ if __name__ == "__main__":
         # logger.debug(f"Blocks after adding numbers: {blocks}")
         print("\n--- Blocks ---")
         for block in blocks:
-            block_name = get_block_name(block)
-            block_type = get_block_type(block)
-            block_magnification = get_block_magnification(block)
-            erase_bleaching_energy = get_erase_bleaching_energy(block)
+            process_block(block)
 
-            print(f"Block Name: {block_name}")
-            print(f"Block Type: {block_type}")
-            print(f"Block Magnification: {block_magnification}")
-            print(f"Erase Bleaching Energy: {erase_bleaching_energy}")
-            if block_type == "RunCycle":
-                run_cycle_number = get_run_cycle_number(block)
-                print(f"Run Cycle Number: {run_cycle_number}")
-                run_cycle_channel_info = get_run_cycle_channel_info(block, bucket_lookup)
-                print(f"Run Cycle Channel Info: {run_cycle_channel_info}")
+if __name__ == "__main__":
+    json_path = get_input_path()
+    data = load_json(json_path)
+    bucket_lookup = build_bucket_lookup(data)
+    experiments = data['experiments']
+    racks = data['racks']
+    rois = data['rois']
+    samples = data['samples']
+    procedures = data['procedures']
+
+    print("\n--- Experiment info ---")
+    for experiment in experiments:
+        process_experiment(experiment)
+
+    print("\n--- Racks ---")
+    for rack in racks:
+        rack_name = get_rack_name(rack)
+        print(f"Rack Name: {rack_name}")
+
+    print("\n--- ROIs ---")
+    for roi in rois:
+        process_rois(roi)
+
+    print("\n--- Samples ---")
+    for sample in samples:
+        process_sample(sample)
+
+    print("\n--- Procedures ---")
+    for procedure in procedures:
+        process_procedure(procedure)
