@@ -239,7 +239,12 @@ def test_get_erase_bleaching_energy():
 
 def test_get_run_cycle_channel_info():
     """Test that the run cycle channel info is extracted correctly."""
-    extracted = mp.get_run_cycle_channel_info(data['procedures'][0]['blocks'][5])
+    bucket_lookup = mp.build_bucket_lookup(data)
+    block         = data['procedures'][0]['blocks'][5]
+    extracted = mp.get_run_cycle_channel_info(
+        block,
+        bucket_lookup=bucket_lookup,
+    )
     import pprint
     pprint.pprint(data['procedures'][0]['blocks'][5]['reagents'])
 
@@ -291,6 +296,11 @@ def test_get_run_cycle_channel_info():
             "ErasingMethod": "Bleaching",
             "BleachingEnergy": 470,
             "ValidatedFor": "PFA"
+        }
+    },
+    {
+        "Channel": "Vio780",
+        "ChannelInfo": {
         }
     }
     ]

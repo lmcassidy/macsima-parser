@@ -357,7 +357,8 @@ def get_antigen_clone_by_reagent_id(reagent_uuid: str,
 
 
 if __name__ == "__main__":
-    data = load_json('./data/250128_macsima_output.json')
+    data = load_json('./data/Corinna - data.json')
+    bucket_lookup = build_bucket_lookup(data)
     experiements = data['experiments']
     racks = data['racks']
     rois = data['rois']
@@ -420,13 +421,14 @@ if __name__ == "__main__":
             block_type = get_block_type(block)
             block_magnification = get_block_magnification(block)
             erase_bleaching_energy = get_erase_bleaching_energy(block)
-            run_cycle_channel_info = get_run_cycle_channel_info(block)
 
 
             print(f"Block Name: {block_name}")
             print(f"Block Type: {block_type}")
             print(f"Block Magnification: {block_magnification}")
             print(f"Erase Bleaching Energy: {erase_bleaching_energy}")
-            print(f"Run Cycle Channel Info: {run_cycle_channel_info}")
-            run_cycle_number = get_run_cycle_number(block)
-            print(f"Run Cycle Number: {run_cycle_number}")
+            if block_type == "RunCycle":
+                run_cycle_number = get_run_cycle_number(block)
+                print(f"Run Cycle Number: {run_cycle_number}")
+                run_cycle_channel_info = get_run_cycle_channel_info(block, bucket_lookup)
+                print(f"Run Cycle Channel Info: {run_cycle_channel_info}")
