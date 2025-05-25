@@ -1,15 +1,13 @@
 from __future__ import annotations
-import os
 import json
-import pandas as pd
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Union, IO, Dict, Tuple, Optional, Iterable
+from typing import Any, Union, IO, Dict, Tuple, Optional
 import logging
 
 # Basic configuration
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
         logging.StreamHandler()  # You can add FileHandler, SMTPHandler, etc.
@@ -107,7 +105,7 @@ def get_used_disk_space(experiment: dict) -> str:
     and round to three decimal places.
     """
     # raw number of **bytes**
-    raw_bytes: int | float = experiment["usedDiskspace"]
+    raw_bytes: int | float = experiment.get("usedDiskspace")
 
     kib: float = raw_bytes / 1000                       # → KiB
     kib_rounded: float = round(kib, 3)                  # keep 3 decimal places
@@ -243,15 +241,7 @@ def get_erase_bleaching_energy(block: dict[str, Any]) -> list[dict[str, Any]] | 
     
     return results if results else "Unknown bleaching energy"
 
-def _erasing(method: str) -> str:
-    """Convert raw erasing method value into a readable string."""
-    return method.replace("ErasingMethod_", "")
-
-def _clean_bucket_id(bid: str) -> str:
-    """strip curly braces from MACSima bucketId"""
-    return bid.lstrip("{").rstrip("}")
-
-    
+  
 def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
     """
     Build a run-cycle channel summary for one ProtocolBlockType_RunCycle block.
@@ -266,10 +256,13 @@ def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
     ]
 
     out: list[dict] = []
-    dct_reagents = block["reagents"]
+    dct_reagents = block.get("reagents", {})
+    if not dct_reagents:
+        logger.warning("No reagents found in RunCycle block")
+        return out
 
     for key, chan_name in channel_order:
-        dc = dct_reagents[key]
+        dc = dct_reagents.get(key, {})
 
         # ---------- basic skeleton ----------
         chan_dict = {"Channel": chan_name, "ChannelInfo": {}}
@@ -280,7 +273,7 @@ def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
             reagent   = bucket_lookup.get(bucket_id)
 
             if reagent:
-                r_exp  = reagent["exposureTime"]
+                r_exp  = reagent.get("exposureTime", "Unknown exposure time")
                 coef   = dc["exposureTimeAndCoefficient"]["timeCoefficient"]
                 clone  = reagent["clone"] or "N/A"
 
@@ -359,18 +352,21 @@ def get_antigen_clone_by_reagent_id(reagent_uuid: str,
 if __name__ == "__main__":
     data = load_json('./data/Corinna - data.json')
     bucket_lookup = build_bucket_lookup(data)
-    experiements = data['experiments']
+    experiments = data['experiments']
     racks = data['racks']
     rois = data['rois']
     samples = data['samples']
     procedures = data['procedures']
 
-    for experiment in experiements:
+    print("\n--- Experiment info ---")
+
+    for experiment in experiments:
         experiment_name = get_experiment_name(experiment)
         start_time = get_start_time(experiment)
         end_time = get_end_time(experiment)
         used_disk_space = get_used_disk_space(experiment)
         running_time = get_running_time(experiment)
+
 
         print(f"Experiment Name: {experiment_name}")
         print(f"Start Time: {start_time}")
@@ -378,10 +374,12 @@ if __name__ == "__main__":
         print(f"Used Disk Space: {used_disk_space}")
         print(f"Running Time: {running_time}")
 
+    print("\n--- Racks ---")
     for rack in racks:
         rack_name = get_rack_name(rack)
         print(f"Rack Name: {rack_name}")
 
+    print("\n--- ROIs ---")
     for roi in rois:
         roi_name = get_roi_name(roi)
         roi_shape_type = get_roi_shape_type(roi)
@@ -389,11 +387,14 @@ if __name__ == "__main__":
         roi_shape_width = get_roi_shape_width(roi)
         autofocus_method = get_autofocus_method(roi)
 
+
         print(f"ROI Name: {roi_name}")
         print(f"ROI Shape Type: {roi_shape_type}")
         print(f"ROI Shape Height: {roi_shape_height}")
         print(f"ROI Shape Width: {roi_shape_width}")
         print(f"Autofocus Method: {autofocus_method}")
+
+    print("\n--- Samples ---")
 
     for sample in samples:
         sample_name = get_sample_name(sample)
@@ -408,6 +409,8 @@ if __name__ == "__main__":
         print(f"Sample Organ: {sample_organ}")
         print(f"Sample Fixation Method: {sample_fixation_method}")
 
+    print("\n--- Procedures ---")
+
     for procedure in procedures:
         procedure_name = get_procedure_name(procedure)
         print(f"Procedure Name: {procedure_name}")
@@ -416,12 +419,12 @@ if __name__ == "__main__":
         # logger.debug(f"Blocks before adding numbers: {blocks}")
         blocks = add_numbers_to_run_cycles(blocks)
         # logger.debug(f"Blocks after adding numbers: {blocks}")
+        print("\n--- Blocks ---")
         for block in blocks:
             block_name = get_block_name(block)
             block_type = get_block_type(block)
             block_magnification = get_block_magnification(block)
             erase_bleaching_energy = get_erase_bleaching_energy(block)
-
 
             print(f"Block Name: {block_name}")
             print(f"Block Type: {block_type}")
