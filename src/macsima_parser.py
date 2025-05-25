@@ -243,55 +243,62 @@ def get_erase_bleaching_energy(block: dict[str, Any]) -> list[dict[str, Any]] | 
     
     return results if results else "Unknown bleaching energy"
 
+def _erasing(method: str) -> str:
+    """Convert raw erasing method value into a readable string."""
+    return method.replace("ErasingMethod_", "")
+
+def _clean_bucket_id(bid: str) -> str:
+    """strip curly braces from MACSima bucketId"""
+    return bid.lstrip("{").rstrip("}")
 
     
-def get_run_cycle_channel_info(block: dict[str, Any]) -> list[dict[str, Any]] | str:
-    if block.get("blockType") != "ProtocolBlockType_RunCycle":
-        return "Unknown channel info"
+def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
+    """
+    Build a run-cycle channel summary for one ProtocolBlockType_RunCycle block.
+    Returns a list ordered DAPI ▸ FITC ▸ PE ▸ APC ▸ Vio780.
+    """
+    channel_order = [
+        ("DetectionChannel_1", "DAPI"),
+        ("DetectionChannel_2", "FITC"),
+        ("DetectionChannel_3", "PE"),
+        ("DetectionChannel_4", "APC"),
+        ("DetectionChannel_5", "Vio780"),
+    ]
 
-    reagents = block.get("reagents", {})
-    if not reagents:
-        return "Unknown channel info"
+    out: list[dict] = []
+    dct_reagents = block["reagents"]
 
-    results = []
-    dapi_added = False
+    for key, chan_name in channel_order:
+        dc = dct_reagents[key]
 
-    for channel_data in reagents.values():
-        fluoro_type = channel_data.get("fluorochromeType", "FluorochromeType_None")
-        label = fluoro_type.split("_")[-1]
+        # ---------- basic skeleton ----------
+        chan_dict = {"Channel": chan_name, "ChannelInfo": {}}
 
-        if fluoro_type == "FluorochromeType_None":
-            if not dapi_added:
-                results.append({"Channel": "DAPI", "ChannelInfo": {}})
-                dapi_added = True
-            continue
+        # ---------- include info only when enabled ----------
+        bucket_id = dc.get("bucketId", "")
+        if bucket_id:
+            reagent   = bucket_lookup.get(bucket_id)
 
-        exposure_info = channel_data.get("exposureTimeAndCoefficient", {})
-        exposure_time = exposure_info.get("exposureTime", {})
-        linearity_mode = exposure_time.get("linearityMode", 0)
-        time_coefficient = exposure_info.get("timeCoefficient", 0)
+            if reagent:
+                r_exp  = reagent["ReagentExposureTime"]
+                coef   = dc["exposureTimeAndCoefficient"]["timeCoefficient"]
+                clone  = reagent["clone"] or "N/A"
 
-        actual_exposure_time = linearity_mode * time_coefficient / 100.0 if time_coefficient else 0
+                chan_dict["ChannelInfo"] = {
+                    "Antigen": reagent["antigen"],
+                    "Clone": clone,
+                    "DilutionFactor": dc["dilutionFactor"],
+                    "IncubationTime": dc["incubationTime"],
+                    "ReagentExposureTime": r_exp,
+                    "ExposureCoefficient": coef,
+                    "ActualExposureTime": r_exp * coef / 100,
+                    "ErasingMethod": dc["erasingMethod"].split("_")[-1],
+                    "BleachingEnergy": dc["bleachingEnergy"],
+                    "ValidatedFor": reagent["supportedFixationMethods"],
+                }
+        out.append(chan_dict)
 
-        channel_info = {
-            "Antigen": "Unknown",  # not in data
-            "Clone": "N/A",        # not in data
-            "DilutionFactor": channel_data.get("dilutionFactor", 0),
-            "IncubationTime": channel_data.get("incubationTime", 0),
-            "ReagentExposureTime": linearity_mode,
-            "ExposureCoefficient": time_coefficient,
-            "ActualExposureTime": actual_exposure_time,
-            "ErasingMethod": channel_data.get("erasingMethod", "ErasingMethod_Default").split("_")[-1],
-            "BleachingEnergy": channel_data.get("bleachingEnergy", 0),
-            "ValidatedFor": "PFA"  # hardcoded default
-        }
-
-        results.append({
-            "Channel": label,
-            "ChannelInfo": channel_info
-        })
-
-    return results if results else "Unknown channel info"
+    return out
 
 # ------------------------------------------------------------------ #
 #  Build once – then reuse
