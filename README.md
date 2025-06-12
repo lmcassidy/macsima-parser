@@ -26,9 +26,10 @@ We recommend using Miniconda for managing Python versions and dependencies in a 
 ```sh
 conda create -n macsima python=3.10
 ```
+
 ### 1.4 Activate your virtual environment
 
-sh```
+```sh
 conda activate macsima
 ```
 
