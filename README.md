@@ -59,9 +59,11 @@ Unzip it to a folder of your choice.
 
 ---
 
-### 6. Run the parser
+### 2.2 Prepare your data
 
 Copy your `.json` MACSima file to the same folder as this script, or note its path.
+
+### 2.3 Run the code
 
 In Terminal/Command Prompt, run:
 
@@ -71,7 +73,7 @@ python src/macsima_parser.py path_to_your_file.json
 
 If you forget the file path, the program will **ask you to enter it**.
 
-**What you’ll get:**
+**Output**
 A new Excel file (with the same name as your JSON file, but ending with `.xlsx`) will be created in the same folder.
 
 Open it in Excel, Google Sheets, or similar!
