@@ -1,13 +1,13 @@
 # MACSima Parser
 
 **MACSima Parser** helps you turn experiment data from a MACSima imaging run (in `.json` format) into a clear Excel file you can open in Excel, Google Sheets, or similar tools.
-You do **not** need to know Python to use this tool!
+You do not need to know Python to use this tool!
 
 ---
 
-## Quick Start (No Python Experience Needed)
+## 1. Setup
 
-### 1. Install Python (if you don’t have it)
+### 1.1 Install Python (if you don’t have it)
 
 * **Windows/macOS:** Download and install Python 3.10 from [python.org/downloads](https://www.python.org/downloads/release/python-3100/).
 
@@ -15,50 +15,47 @@ You do **not** need to know Python to use this tool!
 * **Linux:** Usually Python 3 is already installed.
 * You can check if Pythin is installed by typing `python3 --version` in Terminal.
 
-### 2. Download this code
+### 1.2 Install Miniconda (if you don’t have it)
 
-Click the green **“Code”** button (top right) and select **Download ZIP**.
-Unzip it to a folder of your choice.
+We recommend using Miniconda for managing Python versions and dependencies in a virtual environment. Download and install Miniconda from [[Miniconda installers](https://docs.conda.io/en/latest/miniconda.html)](https://www.anaconda.com/docs/getting-started/miniconda/install)
 
----
+### 1.3 Create a virtual environment using Miniconda 
 
-### 3. Open a Terminal / Command Prompt
-
-* **Windows:** Open “Anaconda Prompt” (if you have Anaconda/Miniconda), or just “Command Prompt”.
-* **macOS:** Open Terminal (search for it in Spotlight).
-* **Linux:** Open your favorite Terminal.
-
----
-
-### 4. Create an isolated Python environment (recommended)
-
-**If you use Anaconda/Miniconda (recommended for beginners):**
+**Once Miniconda is installed**, create your virtual environment.
 
 ```sh
 conda create -n macsima python=3.10
+```
+### 1.4 Activate your virtual environment
+sh```
 conda activate macsima
 ```
-
-**If you do not use Anaconda:**
-
-```sh
-python3 -m venv macsima_env
-```
-
-Activate it:
-
-* **Windows:** `macsima_env\Scripts\activate`
-* **macOS/Linux:** `source macsima_env/bin/activate`
+You’ll see your terminal prompt change to show `(macsima)` at the start, which means the environment is active.
 
 ---
 
-### 5. Install dependencies
+### 1.5 Install dependencies
 
 With your environment activated, install the required libraries:
 
 ```sh
 pip install pandas xlsxwriter
 ```
+
+### 1.6 Download this code
+
+Click the green **“Code”** button (top right) and select **Download ZIP**.
+Unzip it to a folder of your choice.
+
+---
+
+## 2. Run the parser
+
+### 2.1 Open a Terminal / Command Prompt
+
+* **Windows:** Open “Anaconda Prompt” (if you have Anaconda/Miniconda), or just “Command Prompt”.
+* **macOS:** Open Terminal.
+* **Linux:** Open your favorite Terminal.
 
 ---
 
