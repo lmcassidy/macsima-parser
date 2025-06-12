@@ -1,4 +1,4 @@
-# macsima_data_processing
+# macsima_parser
 
 ## Setup
 ```
