@@ -2,6 +2,7 @@ from __future__ import annotations
 import pytest
 import json
 import macsima_parser as mp
+from pathlib import Path
 import logging
 
 # Basic configuration
