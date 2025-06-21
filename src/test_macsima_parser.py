@@ -4,6 +4,7 @@ import json
 import macsima_parser as mp
 from pathlib import Path
 import logging
+import pprint
 
 # Basic configuration
 logging.basicConfig(
@@ -246,7 +247,6 @@ def test_get_run_cycle_channel_info():
         block,
         bucket_lookup=bucket_lookup,
     )
-    import pprint
     pprint.pprint(data['procedures'][0]['blocks'][5]['reagents'])
 
     expected = [
@@ -306,6 +306,27 @@ def test_get_run_cycle_channel_info():
     }
     ]
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
+
+def test_reagent_details_extraction():
+    # Suppose you have a RunCycle block with a reagent attached
+    bucket_lookup = mp.build_bucket_lookup(data)
+    block = data['procedures'][0]['blocks'][5]  # Adjust index as needed
+
+    # Call the function that processes run cycle channel info
+    extracted = mp.get_run_cycle_channel_info(block, bucket_lookup)
+
+    # We expect the output to include extra reagent fields, even if some are blank
+    for channel in extracted:
+        info = channel.get("ChannelInfo", {})
+        # These fields should always be present (blank if missing in data)
+        for field in [
+            "Antigen", "Clone", "DilutionFactor", "IncubationTime", "ReagentExposureTime", 
+            "ExposureCoefficient", "ActualExposureTime", "ErasingMethod", "BleachingEnergy", "ValidatedFor",
+            "antibody", "antibodyType", "hostSpecies", "isotype", "manufacturer", "name", "orderNumber", "species"
+        ]:
+            assert field in info
+
 
 # --------------------------------------------------
 # Helper fixtures & sample data
