@@ -451,7 +451,7 @@ def propagate_magnification(blocks):
 def process_block(block: dict[str, Any],
                   bucket_lookup: dict[str, Any]) -> list[dict[str, Any]]:
     common = {
-        "BlockName":     get_block_name(block),
+        # "BlockName":     get_block_name(block),
         "BlockType":     get_block_type(block),
         "Magnification": get_block_magnification(block),
         "RunCycleNumber": (
