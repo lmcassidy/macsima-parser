@@ -331,7 +331,16 @@ def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
                     "ErasingMethod": dc["erasingMethod"].split("_")[-1],
                     "BleachingEnergy": dc["bleachingEnergy"],
                     "ValidatedFor": reagent["supportedFixationMethods"],
+                    "antibody": reagent.get("antibody", ""),
+                    "antibodyType": reagent.get("antibodyType", ""),
+                    "hostSpecies": reagent.get("hostSpecies", ""),
+                    "isotype": reagent.get("isotype", ""),
+                    "manufacturer": reagent.get("manufacturer", ""),
+                    "name": reagent.get("name", ""),
+                    "orderNumber": reagent.get("orderNumber", ""),
+                    "species": reagent.get("species", ""),
                 }
+                
         out.append(chan_dict)
 
     return out
@@ -356,6 +365,14 @@ def build_bucket_lookup(data: dict) -> Dict[str, Dict[str, Any]]:
             "clone":        r.get("clone",    "N/A"),
             "exposureTime": r.get("exposureTime", 0),
             "supportedFixationMethods": r.get("supportedFixationMethods", ""),
+            "antibody":         r.get("antibody", ""),
+            "antibodyType":     r.get("antibodyType", ""),
+            "hostSpecies":      r.get("hostSpecies", ""),
+            "isotype":          r.get("isotype", ""),
+            "manufacturer":     r.get("manufacturer", ""),
+            "name":             r.get("name", ""),
+            "orderNumber":      r.get("orderNumber", ""),
+            "species":          r.get("species", ""),
         }
         for r in data.get("reagents", [])
     }
