@@ -480,6 +480,27 @@ def sample_json_file(tmp_path: Path, sample_data):
     p.write_text(json.dumps(sample_data))
     return p
 
+
+def test_propagate_magnification():
+    blocks = [
+        {"blockType": "Scan", "magnification": "20x"},
+        {"blockType": "DefineROIs"},
+        {"blockType": "Scan"},
+        {"blockType": "Erase", "magnification": "40x"},
+        {"blockType": "RunCycle"}
+    ]
+
+    # Function you will write/fix!
+    from macsima_parser import propagate_magnification
+
+    updated = propagate_magnification(blocks)
+
+    assert updated[0]["magnification"] == "20x"
+    assert updated[1]["magnification"] == "20x"
+    assert updated[2]["magnification"] == "20x"
+    assert updated[3]["magnification"] == "40x"
+    assert updated[4]["magnification"] == "40x"
+
 # --------------------------------------------------
 # Pure‑function unit tests
 # --------------------------------------------------
