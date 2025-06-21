@@ -350,7 +350,7 @@ def build_bucket_lookup(data: dict) -> Dict[str, Dict[str, Any]]:
     """
     Map bucketId  ->  reagent metadata (antigen, clone, exposureTime, …)
     """
-    # 1️⃣  first map bucketId ➜ reagent UUID (comes from the procedure)
+    # map bucketId ➜ reagent UUID (comes from the procedure)
     bucket_to_reagent_id: Dict[str, str] = {}
     for proc in data.get("procedures", []):
         for link in proc.get("reagents", []):
@@ -359,21 +359,21 @@ def build_bucket_lookup(data: dict) -> Dict[str, Dict[str, Any]]:
             if bid and rid:
                 bucket_to_reagent_id[bid] = rid
 
-    # 2️⃣  second map reagent UUID ➜ metadata (comes from the global catalogue)
+    #  map reagent UUID ➜ metadata (comes from the global catalogue)
     catalogue: Dict[str, Dict[str, Any]] = {
         r["id"]: {
             "antigen":      r.get("antigen",  "Unknown"),
             "clone":        r.get("clone",    "N/A"),
             "exposureTime": r.get("exposureTime", 0),
             "supportedFixationMethods": r.get("supportedFixationMethods", ""),
-            "Antibody":         r.get("Antibody", ""),
-            "AntibodyType":     r.get("AntibodyType", ""),
-            "HostSpecies":      r.get("HostSpecies", ""),
-            "Isotype":          r.get("Isotype", ""),
-            "Manufacturer":     r.get("Manufacturer", ""),
-            "Name":             r.get("Name", ""),
-            "OrderNumber":      r.get("OrderNumber", ""),
-            "Species":          r.get("Species", ""),
+            "Antibody":         r.get("antibody", ""),
+            "AntibodyType":     r.get("antibodyType", ""),
+            "HostSpecies":      r.get("hostSpecies", ""),
+            "Isotype":          r.get("isotype", ""),
+            "Manufacturer":     r.get("manufacturer", ""),
+            "Name":             r.get("name", ""),
+            "OrderNumber":      r.get("orderNumber", ""),
+            "Species":          r.get("species", ""),
         }
         for r in data.get("reagents", [])
     }

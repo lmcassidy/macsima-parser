@@ -400,7 +400,7 @@ def sample_data():
     return {
         "experiments": [
             {
-                "Name": "Exp‑1",
+                "name": "Exp‑1",
                 "executionStartDateTime": "2025‑01‑01T10:00:00",
                 "executionEndDateTime": "2025‑01‑01T12:00:00",
                 "actualRunningTime": 7200,            # 2 h
