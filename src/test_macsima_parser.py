@@ -263,14 +263,14 @@ def test_get_run_cycle_channel_info():
                 "ErasingMethod": "",
                 "BleachingEnergy": "",
                 "ValidatedFor": "",
-                "antibody": "",
-                "antibodyType": "",
-                "hostSpecies": "",
-                "isotype": "",
-                "manufacturer": "",
-                "name": "",
-                "orderNumber": "",
-                "species": ""
+                "Antibody": "",
+                "AntibodyType": "",
+                "HostSpecies": "",
+                "Isotype": "",
+                "Manufacturer": "",
+                "Name": "",
+                "OrderNumber": "",
+                "Species": ""
             }
         },
         {
@@ -286,14 +286,14 @@ def test_get_run_cycle_channel_info():
                 "ErasingMethod": "Bleaching",
                 "BleachingEnergy": 400,
                 "ValidatedFor": "PFA",
-                "antibody": "TCR_Valpha7_2__REA179",
-                "antibodyType": "REA",
-                "hostSpecies": "human cell line",
-                "isotype": "",
-                "manufacturer": "MB",
-                "name": "TCR Vα7.2 Antibody, anti-human, REAfinity™",
-                "orderNumber": "130-123-685",
-                "species": "human"
+                "Antibody": "TCR_Valpha7_2__REA179",
+                "AntibodyType": "REA",
+                "HostSpecies": "human cell line",
+                "Isotype": "",
+                "Manufacturer": "MB",
+                "Name": "TCR Vα7.2 Antibody, anti-human, REAfinity™",
+                "OrderNumber": "130-123-685",
+                "Species": "human"
             }
         },
         {
@@ -309,14 +309,14 @@ def test_get_run_cycle_channel_info():
                 "ErasingMethod": "Bleaching",
                 "BleachingEnergy": 160,
                 "ValidatedFor": "PFA",
-                "antibody": "CD56__AF12_7H3",
-                "antibodyType": "Hybridoma",
-                "hostSpecies": "mouse",
-                "isotype": "",
-                "manufacturer": "MB",
-                "name": "CD56 Antibody, anti-human",
-                "orderNumber": "130-113-307",
-                "species": "human"
+                "Antibody": "CD56__AF12_7H3",
+                "AntibodyType": "Hybridoma",
+                "HostSpecies": "mouse",
+                "Isotype": "",
+                "Manufacturer": "MB",
+                "Name": "CD56 Antibody, anti-human",
+                "OrderNumber": "130-113-307",
+                "Species": "human"
             }
         },
         {
@@ -332,14 +332,14 @@ def test_get_run_cycle_channel_info():
                 "ErasingMethod": "Bleaching",
                 "BleachingEnergy": 470,
                 "ValidatedFor": "PFA",
-                "antibody": "PYGL",
-                "antibodyType": "rabbit",
-                "hostSpecies": "",
-                "isotype": "",
-                "manufacturer": "nordic biosite",
-                "name": "PYGL",
-                "orderNumber": "",
-                "species": "Human"
+                "Antibody": "PYGL",
+                "AntibodyType": "rabbit",
+                "HostSpecies": "",
+                "Isotype": "",
+                "Manufacturer": "nordic biosite",
+                "Name": "PYGL",
+                "OrderNumber": "",
+                "Species": "Human"
             }
         },
         {
@@ -355,14 +355,14 @@ def test_get_run_cycle_channel_info():
                 "ErasingMethod": "",
                 "BleachingEnergy": "",
                 "ValidatedFor": "",
-                "antibody": "",
-                "antibodyType": "",
-                "hostSpecies": "",
-                "isotype": "",
-                "manufacturer": "",
-                "name": "",
-                "orderNumber": "",
-                "species": ""
+                "Antibody": "",
+                "AntibodyType": "",
+                "HostSpecies": "",
+                "Isotype": "",
+                "Manufacturer": "",
+                "Name": "",
+                "OrderNumber": "",
+                "Species": ""
             }
         }
     ]
@@ -385,7 +385,7 @@ def test_reagent_details_extraction():
         for field in [
             "Antigen", "Clone", "DilutionFactor", "IncubationTime", "ReagentExposureTime", 
             "ExposureCoefficient", "ActualExposureTime", "ErasingMethod", "BleachingEnergy", "ValidatedFor",
-            "antibody", "antibodyType", "hostSpecies", "isotype", "manufacturer", "name", "orderNumber", "species"
+            "Antibody", "AntibodyType", "HostSpecies", "Isotype", "Manufacturer", "Name", "OrderNumber", "Species"
         ]:
             assert field in info
 
@@ -400,7 +400,7 @@ def sample_data():
     return {
         "experiments": [
             {
-                "name": "Exp‑1",
+                "Name": "Exp‑1",
                 "executionStartDateTime": "2025‑01‑01T10:00:00",
                 "executionEndDateTime": "2025‑01‑01T12:00:00",
                 "actualRunningTime": 7200,            # 2 h
@@ -418,7 +418,7 @@ def sample_data():
         "samples": [
             {
                 "name": "Sample‑1",
-                "species": "Mouse",
+                "Species": "Mouse",
                 "sampleType": "Tissue",
                 "organ": "Liver",
                 "fixationMethod": "PFA",
