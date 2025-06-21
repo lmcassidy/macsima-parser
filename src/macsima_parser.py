@@ -436,6 +436,18 @@ def process_sample(sample: dict[str, Any]) -> dict[str, Any]:
         "Fixation":     get_sample_fixation_method(sample),
     }
 
+def propagate_magnification(blocks):
+    last_mag = None
+    out = []
+    for block in blocks:
+        # If 'magnification' is present and not None/empty, update last_mag
+        if block.get("magnification"):
+            last_mag = block["magnification"]
+        new_block = block.copy()
+        new_block["magnification"] = last_mag
+        out.append(new_block)
+    return out
+
 def process_block(block: dict[str, Any],
                   bucket_lookup: dict[str, Any]) -> list[dict[str, Any]]:
     common = {
@@ -513,8 +525,11 @@ if __name__ == "__main__":
     for proc in data["procedures"]:
         # add run-cycle numbers once
         blocks = add_numbers_to_run_cycles(proc["blocks"])
+        # propagate magnification through the block list
+        blocks = propagate_magnification(blocks)
         for b in blocks:
             block_rows.extend(process_block(b, bucket_lookup))
+
 
     # ---------- to Excel ---------------------------------------
     out_xlsx = json_path.with_suffix(".xlsx")
