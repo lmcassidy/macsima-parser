@@ -18,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-data = mp.load_json('./data/250128_macsima_output.json')
+data = mp.load_json('../data/250128_macsima_output.json')
 
 # --------------------------------------------------
 # Experiment tests
