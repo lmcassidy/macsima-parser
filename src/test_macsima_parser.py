@@ -252,59 +252,121 @@ def test_get_run_cycle_channel_info():
     expected = [
         {
             "Channel": "DAPI",
-            "ChannelInfo": {}
+            "ChannelInfo": {
+                "Antigen": "",
+                "Clone": "",
+                "DilutionFactor": "",
+                "IncubationTime": "",
+                "ReagentExposureTime": "",
+                "ExposureCoefficient": "",
+                "ActualExposureTime": "",
+                "ErasingMethod": "",
+                "BleachingEnergy": "",
+                "ValidatedFor": "",
+                "antibody": "",
+                "antibodyType": "",
+                "hostSpecies": "",
+                "isotype": "",
+                "manufacturer": "",
+                "name": "",
+                "orderNumber": "",
+                "species": ""
+            }
         },
         {
             "Channel": "FITC",
             "ChannelInfo": {
                 "Antigen": "TCR Vα7.2",
                 "Clone": "REA179",
-                "DilutionFactor" : 50,
+                "DilutionFactor": 50,
                 "IncubationTime": 30,
                 "ReagentExposureTime": 56,
                 "ExposureCoefficient": 330,
                 "ActualExposureTime": 184.8,
                 "ErasingMethod": "Bleaching",
                 "BleachingEnergy": 400,
-                "ValidatedFor": "PFA"
-            },
+                "ValidatedFor": "PFA",
+                "antibody": "TCR_Valpha7_2__REA179",
+                "antibodyType": "REA",
+                "hostSpecies": "human cell line",
+                "isotype": "",
+                "manufacturer": "MB",
+                "name": "TCR Vα7.2 Antibody, anti-human, REAfinity™",
+                "orderNumber": "130-123-685",
+                "species": "human"
+            }
         },
         {
             "Channel": "PE",
             "ChannelInfo": {
                 "Antigen": "CD56",
                 "Clone": "AF12-7H3",
-                "DilutionFactor" : 50,
+                "DilutionFactor": 50,
                 "IncubationTime": 30,
                 "ReagentExposureTime": 24,
                 "ExposureCoefficient": 430,
                 "ActualExposureTime": 103.2,
                 "ErasingMethod": "Bleaching",
                 "BleachingEnergy": 160,
-                "ValidatedFor": "PFA"
-            }   
-    },
-    {
-        "Channel": "APC",
-        "ChannelInfo": {
-            "Antigen": "PYGL",
-            "Clone": "N/A",
-            "DilutionFactor" : 50,
-            "IncubationTime": 30,
-            "ReagentExposureTime": 240,
-            "ExposureCoefficient": 100,
-            "ActualExposureTime": 240,
-            "ErasingMethod": "Bleaching",
-            "BleachingEnergy": 470,
-            "ValidatedFor": "PFA"
+                "ValidatedFor": "PFA",
+                "antibody": "CD56__AF12_7H3",
+                "antibodyType": "Hybridoma",
+                "hostSpecies": "mouse",
+                "isotype": "",
+                "manufacturer": "MB",
+                "name": "CD56 Antibody, anti-human",
+                "orderNumber": "130-113-307",
+                "species": "human"
+            }
+        },
+        {
+            "Channel": "APC",
+            "ChannelInfo": {
+                "Antigen": "PYGL",
+                "Clone": "",  # Make sure this matches your new code!
+                "DilutionFactor": 50,
+                "IncubationTime": 30,
+                "ReagentExposureTime": 240,
+                "ExposureCoefficient": 100,
+                "ActualExposureTime": 240.0,
+                "ErasingMethod": "Bleaching",
+                "BleachingEnergy": 470,
+                "ValidatedFor": "PFA",
+                "antibody": "PYGL",
+                "antibodyType": "rabbit",
+                "hostSpecies": "",
+                "isotype": "",
+                "manufacturer": "nordic biosite",
+                "name": "PYGL",
+                "orderNumber": "",
+                "species": "Human"
+            }
+        },
+        {
+            "Channel": "Vio780",
+            "ChannelInfo": {
+                "Antigen": "",
+                "Clone": "",
+                "DilutionFactor": "",
+                "IncubationTime": "",
+                "ReagentExposureTime": "",
+                "ExposureCoefficient": "",
+                "ActualExposureTime": "",
+                "ErasingMethod": "",
+                "BleachingEnergy": "",
+                "ValidatedFor": "",
+                "antibody": "",
+                "antibodyType": "",
+                "hostSpecies": "",
+                "isotype": "",
+                "manufacturer": "",
+                "name": "",
+                "orderNumber": "",
+                "species": ""
+            }
         }
-    },
-    {
-        "Channel": "Vio780",
-        "ChannelInfo": {
-        }
-    }
     ]
+
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
 
 

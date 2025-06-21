@@ -283,7 +283,6 @@ def get_erase_channel_info(block: dict[str, Any]) -> list[dict]:
             )
     return out
 
-
   
 def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
     """
@@ -297,6 +296,12 @@ def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
         ("DetectionChannel_4", "APC"),
         ("DetectionChannel_5", "Vio780"),
     ]
+    # Full field set (add more as needed)
+    FIELDNAMES = [
+        "Antigen", "Clone", "DilutionFactor", "IncubationTime", "ReagentExposureTime",
+        "ExposureCoefficient", "ActualExposureTime", "ErasingMethod", "BleachingEnergy", "ValidatedFor",
+        "antibody", "antibodyType", "hostSpecies", "isotype", "manufacturer", "name", "orderNumber", "species"
+    ]
 
     out: list[dict] = []
     dct_reagents = block.get("reagents", {})
@@ -306,44 +311,40 @@ def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
 
     for key, chan_name in channel_order:
         dc = dct_reagents.get(key, {})
-
-        # ---------- basic skeleton ----------
-        chan_dict = {"Channel": chan_name, "ChannelInfo": {}}
-
-        # ---------- include info only when enabled ----------
+        chan_dict = {"Channel": chan_name}
+        # Build a dict with all keys, defaulting to ""
+        chan_info = {f: "" for f in FIELDNAMES}
         bucket_id = dc.get("bucketId", "")
         if bucket_id:
-            reagent   = bucket_lookup.get(bucket_id)
-
-            if reagent:
-                r_exp  = reagent.get("exposureTime", "Unknown exposure time")
-                coef   = dc["exposureTimeAndCoefficient"]["timeCoefficient"]
-                clone  = reagent["clone"] or "N/A"
-
-                chan_dict["ChannelInfo"] = {
-                    "Antigen": reagent["antigen"],
-                    "Clone": clone,
-                    "DilutionFactor": dc["dilutionFactor"],
-                    "IncubationTime": dc["incubationTime"],
-                    "ReagentExposureTime": r_exp,
-                    "ExposureCoefficient": coef,
-                    "ActualExposureTime": r_exp * coef / 100,
-                    "ErasingMethod": dc["erasingMethod"].split("_")[-1],
-                    "BleachingEnergy": dc["bleachingEnergy"],
-                    "ValidatedFor": reagent["supportedFixationMethods"],
-                    "antibody": reagent.get("antibody", ""),
-                    "antibodyType": reagent.get("antibodyType", ""),
-                    "hostSpecies": reagent.get("hostSpecies", ""),
-                    "isotype": reagent.get("isotype", ""),
-                    "manufacturer": reagent.get("manufacturer", ""),
-                    "name": reagent.get("name", ""),
-                    "orderNumber": reagent.get("orderNumber", ""),
-                    "species": reagent.get("species", ""),
-                }
-                
+            reagent = bucket_lookup.get(bucket_id, {})
+            # Fill from dc and reagent as before
+            chan_info.update({
+                "Antigen": reagent.get("antigen", ""),
+                "Clone": reagent.get("clone", ""),
+                "DilutionFactor": dc.get("dilutionFactor", ""),
+                "IncubationTime": dc.get("incubationTime", ""),
+                "ReagentExposureTime": reagent.get("exposureTime", ""),
+                "ExposureCoefficient": dc.get("exposureTimeAndCoefficient", {}).get("timeCoefficient", ""),
+                "ActualExposureTime": (
+                    reagent.get("exposureTime", 0) * dc.get("exposureTimeAndCoefficient", {}).get("timeCoefficient", 0) / 100
+                    if reagent.get("exposureTime") and dc.get("exposureTimeAndCoefficient") else ""
+                ),
+                "ErasingMethod": dc.get("erasingMethod", "").split("_")[-1] if dc.get("erasingMethod") else "",
+                "BleachingEnergy": dc.get("bleachingEnergy", ""),
+                "ValidatedFor": reagent.get("supportedFixationMethods", ""),
+                "antibody": reagent.get("antibody", ""),
+                "antibodyType": reagent.get("antibodyType", ""),
+                "hostSpecies": reagent.get("hostSpecies", ""),
+                "isotype": reagent.get("isotype", ""),
+                "manufacturer": reagent.get("manufacturer", ""),
+                "name": reagent.get("name", ""),
+                "orderNumber": reagent.get("orderNumber", ""),
+                "species": reagent.get("species", ""),
+            })
+        chan_dict["ChannelInfo"] = chan_info
         out.append(chan_dict)
-
     return out
+
 
 def build_bucket_lookup(data: dict) -> Dict[str, Dict[str, Any]]:
     """
