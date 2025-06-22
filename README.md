@@ -74,6 +74,8 @@ cd /Users/username/folder/path/to/macsima-parser-main
 
 ### 2.2 Prepare your data
 
+Create folder called `data` and put your MACsima .json file(s) into it.
+
 Copy your `.json` MACSima file to the same folder as this script, or note its path.
 
 ### 2.3 Run the code
