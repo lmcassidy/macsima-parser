@@ -63,6 +63,13 @@ Unzip it to a folder of your choice.
 * **macOS:** Open Terminal.
 * **Linux:** Open your favorite Terminal.
 
+Navigate to the folder containing the code. 
+
+e.g.
+```
+cd /Users/username/folder/path/to/macsima-parser-main
+```
+
 ---
 
 ### 2.2 Prepare your data
