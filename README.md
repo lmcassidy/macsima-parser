@@ -19,6 +19,8 @@ You do not need to know Python to use this tool!
 
 We recommend using Miniconda for managing Python versions and dependencies in a virtual environment. Download and install Miniconda from [[Miniconda installers](https://docs.conda.io/en/latest/miniconda.html)](https://www.anaconda.com/docs/getting-started/miniconda/install)
 
+NOTE: make sure conda is added to your PATH. Ignore warning message in installer.
+
 ### 1.3 Create a virtual environment using Miniconda 
 
 **Once Miniconda is installed**, create your virtual environment.
