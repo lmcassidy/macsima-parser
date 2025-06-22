@@ -114,7 +114,7 @@ pytest src/test_macsima_parser.py
 * **Excel file not created**
   Double-check that your input JSON file is correct and in the right location.
 * **Any errors?**
-  Please copy the error message and open an [issue](#).
+  Please copy the error message and open an [issue](https://github.com/lmcassidy/macsima-parser/issues).
 
 ---
 
