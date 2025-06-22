@@ -28,7 +28,7 @@ NOTE: make sure conda is added to your PATH. Ignore warning message in installer
 ```sh
 conda create -n macsima python=3.10
 ```
-
+This will prompt you to type y (yes) to proceed.
 ### 1.4 Activate your virtual environment
 
 ```sh
