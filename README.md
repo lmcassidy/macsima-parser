@@ -13,7 +13,7 @@ You do not need to know Python to use this tool!
 
   * During install, make sure to check the box **“Add Python to PATH”**.
 * **Linux:** Usually Python 3 is already installed.
-* You can check if Pythin is installed by typing `python3 --version` in Terminal.
+* You can check if Python is installed by typing `python3 --version` in Terminal.
 
 ### 1.2 Install Miniconda (if you don’t have it)
 
