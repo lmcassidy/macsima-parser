@@ -120,7 +120,8 @@ pytest src/test_macsima_parser.py
 
 ## About
 
-Developed by Lauren Cassidy.
+Developer: Lauren Cassidy
+Project Manager: Féaron Cassidy.
 This script is open-source. Improvements are welcome!
 
 ---
