@@ -36,6 +36,7 @@ conda activate macsima
 ```
 
 You’ll see your terminal prompt change to show `(macsima)` at the start, which means the environment is active.
+Link to tutorial for more info e.g. how to see active env
 
 ---
 
