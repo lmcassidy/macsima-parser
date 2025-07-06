@@ -21,6 +21,25 @@ logger = logging.getLogger(__name__)
 JsonFile = Union[str, Path, IO[str]]
 
 
+def format_column_header(header: str) -> str:
+    """
+    Format column headers by adding line breaks between words.
+    e.g., 'BleachingEnergy' -> 'Bleaching\nEnergy'
+    """
+    import re
+    # Insert line break before each capital letter that follows a lowercase letter
+    # or before a capital letter that follows another capital letter and is followed by a lowercase letter
+    formatted = re.sub(r'([a-z])([A-Z])|([A-Z])([A-Z][a-z])', r'\1\3\n\2\4', header)
+    return formatted
+
+
+def format_dict_headers(data_dict: dict) -> dict:
+    """
+    Format all keys in a dictionary by adding line breaks between words.
+    """
+    return {format_column_header(key): value for key, value in data_dict.items()}
+
+
 def get_input_path() -> Path:
     parser = argparse.ArgumentParser(description="MACSima JSON parser")
     parser.add_argument("json_path", nargs="?", type=Path, help="Path to input JSON file")
@@ -413,31 +432,31 @@ def get_antigen_clone_by_reagent_id(reagent_uuid: str,
     return None
 
 def process_experiment(experiment: dict[str, Any]) -> dict[str, Any]:
-    return {
+    return format_dict_headers({
         "ExperimentName":  get_experiment_name(experiment),
         "StartTime":       get_start_time(experiment),
         "EndTime":         get_end_time(experiment),
         "RunningTime":     get_running_time(experiment),
         "UsedDiskSpace":   get_used_disk_space(experiment),
-    }
+    })
 
 def process_rois(roi: dict[str, Any]) -> dict[str, Any]:
-    return {
+    return format_dict_headers({
         "ROIName":    get_roi_name(roi),
         "Shape":      get_roi_shape_type(roi),
         "Height":     get_roi_shape_height(roi),
         "Width":      get_roi_shape_width(roi),
         "Autofocus":  get_autofocus_method(roi),
-    }
+    })
 
 def process_sample(sample: dict[str, Any]) -> dict[str, Any]:
-    return {
+    return format_dict_headers({
         "SampleName":   get_sample_name(sample),
         "Species":      get_sample_species(sample),
         "Type":         get_sample_type(sample),
         "Organ":        get_sample_organ(sample),
         "Fixation":     get_sample_fixation_method(sample),
-    }
+    })
 
 def propagate_magnification(blocks):
     last_mag = None
@@ -467,24 +486,24 @@ def process_block(block: dict[str, Any],
         rows = []
         for chan in get_erase_channel_info(block):
             rows.append(
-                {
+                format_dict_headers({
                     **common,
                     "Channel":         chan["Channel"],
                     "BleachingEnergy": chan["ChannelInfo"]["BleachingEnergy"],
-                }
+                })
             )
         return rows                         # <- finished for Erase
 
     # ---------- Non-run-cycle  (Scan, DefineROIs, …) -------------
     if common["BlockType"] != "RunCycle":
-        return [common]
+        return [format_dict_headers(common)]
 
     # ---------- RUN-CYCLE blocks --------------------------------
     rows = []
     for chan in get_run_cycle_channel_info(block, bucket_lookup):
         cc = chan["ChannelInfo"]
         rows.append(
-            {
+            format_dict_headers({
                 **common,
                 "Channel":         chan["Channel"],
                 "Antigen":         cc.get("Antigen", ""),
@@ -505,9 +524,7 @@ def process_block(block: dict[str, Any],
                 "Name": cc.get("Name"),
                 "OrderNumber": cc.get("OrderNumber"),
                 "Species": cc.get("Species")
-
-
-            }
+            })
         )
     return rows
 
