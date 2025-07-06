@@ -18,7 +18,265 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-data = mp.load_json('../data/250128_macsima_output.json')
+# Create dummy data structure for testing
+dummy_data = {
+    "experiments": [
+        {
+            "name": "250128_liver_OCT_FCRB 1",
+            "executionStartDateTime": "2025-01-28T15:53:36Z",
+            "executionEndDateTime": "2025-01-29T06:43:08Z",
+            "actualRunningTime": 53367,  # 14h 49m 27s
+            "usedDiskspace": 182645,  # 178.364 KB
+        }
+    ],
+    "procedures": [
+        {
+            "comment": "Standard procedure",
+            "blocks": [
+                {
+                    "protocolBlockType": "protocolBlockType_Scan",
+                    "comment": "Scan",
+                    "magnification": "Magnification_2x",
+                    "isEnabled": True,
+                    "detectionSettings": [],
+                },
+                {
+                    "protocolBlockType": "protocolBlockType_DefineROIs",
+                    "comment": "Define ROIs",
+                    "isEnabled": True,
+                },
+                {
+                    "protocolBlockType": "protocolBlockType_Scan",
+                    "comment": "Scan",
+                    "magnification": "Magnification_20x",
+                    "isEnabled": True,
+                    "detectionSettings": [],
+                },
+                {
+                    "protocolBlockType": "protocolBlockType_Erase",
+                    "comment": "Erase",
+                    "isEnabled": True,
+                    "channels": [
+                        {"channelName": "FITC", "bleachingEnergy": 1980},
+                        {"channelName": "PE", "bleachingEnergy": 840},
+                        {"channelName": "APC", "bleachingEnergy": 780}
+                    ]
+                },
+                {
+                    "protocolBlockType": "protocolBlockType_RestainNuclei",
+                    "comment": "Restain Nuclei",
+                    "isEnabled": True,
+                },
+                {
+                    "protocolBlockType": "protocolBlockType_RunCycle",
+                    "comment": "Run Cycle",
+                    "isEnabled": True,
+                    "bucketIdMapping": {"DAPI": "bucket1", "FITC": "bucket2", "PE": "bucket3", "APC": "bucket4", "Vio780": "bucket5"},
+                    "channels": [],
+                    "erasingMethod": "Bleach",
+                    "bleachingEnergy": 5,
+                    "incubationTime": 30,
+                    "dilutionFactor": 50,
+                    "timeCoefficient": 330,
+                    "reagents": [
+                        {
+                            "channelName": "DAPI",
+                            "bucketId": "bucket1",
+                            "reagentExposureTime": 0,
+                            "exposureCoefficient": 0,
+                            "actualExposureTime": 0,
+                            "erasingMethod": "",
+                            "bleachingEnergy": 0
+                        },
+                        {
+                            "channelName": "FITC",
+                            "bucketId": "bucket2",
+                            "reagentExposureTime": 56,
+                            "exposureCoefficient": 330,
+                            "actualExposureTime": 184.8,
+                            "erasingMethod": "Bleaching",
+                            "bleachingEnergy": 400
+                        },
+                        {
+                            "channelName": "PE",
+                            "bucketId": "bucket3",
+                            "reagentExposureTime": 24,
+                            "exposureCoefficient": 430,
+                            "actualExposureTime": 103.2,
+                            "erasingMethod": "Bleaching",
+                            "bleachingEnergy": 160
+                        },
+                        {
+                            "channelName": "APC",
+                            "bucketId": "bucket4",
+                            "reagentExposureTime": 240,
+                            "exposureCoefficient": 100,
+                            "actualExposureTime": 240.0,
+                            "erasingMethod": "Bleaching",
+                            "bleachingEnergy": 470
+                        },
+                        {
+                            "channelName": "Vio780",
+                            "bucketId": "bucket5",
+                            "reagentExposureTime": 0,
+                            "exposureCoefficient": 0,
+                            "actualExposureTime": 0,
+                            "erasingMethod": "",
+                            "bleachingEnergy": 0
+                        }
+                    ]
+                },
+                {
+                    "protocolBlockType": "protocolBlockType_RunCycle",
+                    "comment": "Run Cycle",
+                    "isEnabled": True,
+                    "bucketIdMapping": {"DAPI": "bucket1", "FITC": "bucket2", "PE": "bucket3", "APC": "bucket4", "Vio780": "bucket5"},
+                    "channels": [],
+                    "erasingMethod": "Bleach",
+                    "bleachingEnergy": 5,
+                    "incubationTime": 30,
+                    "dilutionFactor": 50,
+                    "timeCoefficient": 330,
+                    "reagents": []
+                },
+                {
+                    "protocolBlockType": "protocolBlockType_RunCycle",
+                    "comment": "Run Cycle",
+                    "isEnabled": True,
+                    "bucketIdMapping": {"DAPI": "bucket1", "FITC": "bucket2", "PE": "bucket3", "APC": "bucket4", "Vio780": "bucket5"},
+                    "channels": [],
+                    "erasingMethod": "Bleach",
+                    "bleachingEnergy": 5,
+                    "incubationTime": 30,
+                    "dilutionFactor": 50,
+                    "timeCoefficient": 330,
+                    "reagents": []
+                }
+            ]
+        }
+    ],
+    "racks": [
+        {
+            "name": "250128_FCRB"
+        }
+    ],
+    "rois": [
+        {
+            "name": "C Overview",
+            "type": "Rectangle",
+            "shape": {
+                "x": 0,
+                "y": 0,
+                "width": "19",
+                "height": "10"
+            },
+            "autoFocus": {
+                "method": "ImageBased"
+            }
+        },
+        {
+            "name": "ROI 1",
+            "type": "Rectangle",
+            "shape": {
+                "x": 0,
+                "y": 0,
+                "width": "2.6345827695784165",
+                "height": "2.350855833425806"
+            },
+            "autoFocus": {
+                "method": "ConstantZ"
+            }
+        }
+    ],
+    "samples": [
+        {
+            "name": "250128_liver_OCT_FCRB",
+            "species": "Human",
+            "sampleType": "Tissue",
+            "organ": "Liver",
+            "fixationMethod": "PFA"
+        }
+    ],
+    "reagents": [
+        {
+            "bucketId": "bucket1",
+            "antigenName": "",
+            "clone": "",
+            "exposureTime": 0,
+            "supportedFixationMethods": ["PFA"],
+            "antibody": "",
+            "antibodyType": "",
+            "hostSpecies": "",
+            "isotype": "",
+            "manufacturer": "",
+            "name": "",
+            "orderNumber": "",
+            "species": ""
+        },
+        {
+            "bucketId": "bucket2",
+            "antigenName": "TCR Vα7.2",
+            "clone": "REA179",
+            "exposureTime": 56,
+            "supportedFixationMethods": ["PFA"],
+            "antibody": "TCR_Valpha7_2__REA179",
+            "antibodyType": "REA",
+            "hostSpecies": "human cell line",
+            "isotype": "",
+            "manufacturer": "MB",
+            "name": "TCR Vα7.2 Antibody, anti-human, REAfinity™",
+            "orderNumber": "130-123-685",
+            "species": "human"
+        },
+        {
+            "bucketId": "bucket3",
+            "antigenName": "CD56",
+            "clone": "AF12-7H3",
+            "exposureTime": 24,
+            "supportedFixationMethods": ["PFA"],
+            "antibody": "CD56__AF12_7H3",
+            "antibodyType": "Hybridoma",
+            "hostSpecies": "mouse",
+            "isotype": "",
+            "manufacturer": "MB",
+            "name": "CD56 Antibody, anti-human",
+            "orderNumber": "130-113-307",
+            "species": "human"
+        },
+        {
+            "bucketId": "bucket4",
+            "antigenName": "PYGL",
+            "clone": "",
+            "exposureTime": 240,
+            "supportedFixationMethods": ["PFA"],
+            "antibody": "PYGL",
+            "antibodyType": "rabbit",
+            "hostSpecies": "",
+            "isotype": "",
+            "manufacturer": "nordic biosite",
+            "name": "PYGL",
+            "orderNumber": "",
+            "species": "Human"
+        },
+        {
+            "bucketId": "bucket5",
+            "antigenName": "",
+            "clone": "",
+            "exposureTime": 0,
+            "supportedFixationMethods": ["PFA"],
+            "antibody": "",
+            "antibodyType": "",
+            "hostSpecies": "",
+            "isotype": "",
+            "manufacturer": "",
+            "name": "",
+            "orderNumber": "",
+            "species": ""
+        }
+    ]
+}
+
+data = dummy_data
 
 # --------------------------------------------------
 # Experiment tests
