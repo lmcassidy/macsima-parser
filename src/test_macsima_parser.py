@@ -84,53 +84,48 @@ dummy_data = {
                     "incubationTime": 30,
                     "dilutionFactor": 50,
                     "timeCoefficient": 330,
-                    "reagents": [
-                        {
-                            "channelName": "DAPI",
+                    "reagents": {
+                        "DetectionChannel_1": {
                             "bucketId": "bucket1",
-                            "reagentExposureTime": 0,
-                            "exposureCoefficient": 0,
-                            "actualExposureTime": 0,
+                            "dilutionFactor": 50,
+                            "incubationTime": 30,
+                            "exposureTimeAndCoefficient": {"timeCoefficient": 0},
                             "erasingMethod": "",
                             "bleachingEnergy": 0
                         },
-                        {
-                            "channelName": "FITC",
+                        "DetectionChannel_2": {
                             "bucketId": "bucket2",
-                            "reagentExposureTime": 56,
-                            "exposureCoefficient": 330,
-                            "actualExposureTime": 184.8,
-                            "erasingMethod": "Bleaching",
+                            "dilutionFactor": 50,
+                            "incubationTime": 30,
+                            "exposureTimeAndCoefficient": {"timeCoefficient": 330},
+                            "erasingMethod": "ErasingMethod_Bleaching",
                             "bleachingEnergy": 400
                         },
-                        {
-                            "channelName": "PE",
+                        "DetectionChannel_3": {
                             "bucketId": "bucket3",
-                            "reagentExposureTime": 24,
-                            "exposureCoefficient": 430,
-                            "actualExposureTime": 103.2,
-                            "erasingMethod": "Bleaching",
+                            "dilutionFactor": 50,
+                            "incubationTime": 30,
+                            "exposureTimeAndCoefficient": {"timeCoefficient": 430},
+                            "erasingMethod": "ErasingMethod_Bleaching",
                             "bleachingEnergy": 160
                         },
-                        {
-                            "channelName": "APC",
+                        "DetectionChannel_4": {
                             "bucketId": "bucket4",
-                            "reagentExposureTime": 240,
-                            "exposureCoefficient": 100,
-                            "actualExposureTime": 240.0,
-                            "erasingMethod": "Bleaching",
+                            "dilutionFactor": 50,
+                            "incubationTime": 30,
+                            "exposureTimeAndCoefficient": {"timeCoefficient": 100},
+                            "erasingMethod": "ErasingMethod_Bleaching",
                             "bleachingEnergy": 470
                         },
-                        {
-                            "channelName": "Vio780",
+                        "DetectionChannel_5": {
                             "bucketId": "bucket5",
-                            "reagentExposureTime": 0,
-                            "exposureCoefficient": 0,
-                            "actualExposureTime": 0,
+                            "dilutionFactor": 50,
+                            "incubationTime": 30,
+                            "exposureTimeAndCoefficient": {"timeCoefficient": 0},
                             "erasingMethod": "",
                             "bleachingEnergy": 0
                         }
-                    ]
+                    }
                 },
                 {
                     "blockType": "ProtocolBlockType_RunCycle",
@@ -144,7 +139,7 @@ dummy_data = {
                     "incubationTime": 30,
                     "dilutionFactor": 50,
                     "timeCoefficient": 330,
-                    "reagents": []
+                    "reagents": {}
                 },
                 {
                     "blockType": "ProtocolBlockType_RunCycle",
@@ -158,7 +153,7 @@ dummy_data = {
                     "incubationTime": 30,
                     "dilutionFactor": 50,
                     "timeCoefficient": 330,
-                    "reagents": []
+                    "reagents": {}
                 }
             ]
         }
