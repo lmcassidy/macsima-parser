@@ -199,6 +199,7 @@ dummy_data = {
     ],
     "reagents": [
         {
+            "id": "bucket1",
             "bucketId": "bucket1",
             "antigenName": "",
             "clone": "",
