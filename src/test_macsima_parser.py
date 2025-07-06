@@ -1087,3 +1087,36 @@ def test_process_sample():
     assert result["Type"] == "Tissue"
     assert result["Organ"] == "Liver"
     assert result["Fixation"] == "PFA"
+
+
+def test_process_block_column_order():
+    """Test that block processing maintains the correct column order."""
+    bucket_lookup = mp.build_bucket_lookup(data)
+    
+    # Test with a RunCycle block
+    run_cycle_block = data['procedures'][0]['blocks'][5]  # RunCycle block
+    result = mp.process_block(run_cycle_block, bucket_lookup)
+    
+    # Should return a list of dictionaries
+    assert isinstance(result, list)
+    assert len(result) > 0
+    
+    # Check that columns are in the correct order
+    expected_order = [
+        "Run\nCycle\nNumber", "Block\nType", "Antigen", "Channel", "Magnification",
+        "Clone", "Dilution\nFactor", "Incubation\nTime", "Reagent\nExposure",
+        "Coefficient", "Actual\nExposure", "Erasing\nMethod", "Bleaching\nEnergy",
+        "Validated\nFor", "Antibody", "Antibody\nType", "Host\nSpecies", "Isotype",
+        "Manufacturer", "Order\nNumber", "Species", "Name"
+    ]
+    
+    actual_columns = list(result[0].keys())
+    assert actual_columns == expected_order
+    
+    # Test with a non-RunCycle block
+    scan_block = data['procedures'][0]['blocks'][0]  # Scan block
+    result_scan = mp.process_block(scan_block, bucket_lookup)
+    
+    # Should have the same column order (with most columns empty)
+    actual_columns_scan = list(result_scan[0].keys())
+    assert actual_columns_scan == expected_order

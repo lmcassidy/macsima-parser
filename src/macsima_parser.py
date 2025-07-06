@@ -504,60 +504,82 @@ def propagate_magnification(blocks):
 
 def process_block(block: dict[str, Any],
                   bucket_lookup: dict[str, Any]) -> list[dict[str, Any]]:
-    common = {
-        # "BlockName":     get_block_name(block),
-        "BlockType":     get_block_type(block),
-        "Magnification": get_block_magnification(block),
-        "RunCycleNumber": (
-            get_run_cycle_number(block) if get_block_type(block) == "RunCycle" else ""
-        ),
-    }
+    
+    def create_ordered_row(**values):
+        """Create a row with columns in the desired order."""
+        # Define the desired column order
+        column_order = [
+            "RunCycleNumber", "BlockType", "Antigen", "Channel", "Magnification",
+            "Clone", "DilutionFactor", "IncubationTime", "ReagentExposure", 
+            "Coefficient", "ActualExposure", "ErasingMethod", "BleachingEnergy",
+            "ValidatedFor", "Antibody", "AntibodyType", "HostSpecies", "Isotype",
+            "Manufacturer", "OrderNumber", "Species", "Name"
+        ]
+        
+        # Create ordered dictionary with empty defaults
+        ordered_row = {}
+        for col in column_order:
+            ordered_row[col] = values.get(col, "")
+        
+        return ordered_row
+    
+    # Common values for all block types
+    block_type = get_block_type(block)
+    magnification = get_block_magnification(block)
+    run_cycle_number = get_run_cycle_number(block) if block_type == "RunCycle" else ""
 
     # ---------- ERASE blocks -----------------------------------
-    if common["BlockType"] == "Erase":
+    if block_type == "Erase":
         rows = []
         for chan in get_erase_channel_info(block):
-            rows.append(
-                format_dict_headers({
-                    **common,
-                    "Channel":         chan["Channel"],
-                    "BleachingEnergy": chan["ChannelInfo"]["BleachingEnergy"],
-                })
+            row = create_ordered_row(
+                RunCycleNumber=run_cycle_number,
+                BlockType=block_type,
+                Magnification=magnification,
+                Channel=chan["Channel"],
+                BleachingEnergy=chan["ChannelInfo"]["BleachingEnergy"],
             )
+            rows.append(format_dict_headers(row))
         return rows                         # <- finished for Erase
 
     # ---------- Non-run-cycle  (Scan, DefineROIs, …) -------------
-    if common["BlockType"] != "RunCycle":
-        return [format_dict_headers(common)]
+    if block_type != "RunCycle":
+        row = create_ordered_row(
+            RunCycleNumber=run_cycle_number,
+            BlockType=block_type,
+            Magnification=magnification,
+        )
+        return [format_dict_headers(row)]
 
     # ---------- RUN-CYCLE blocks --------------------------------
     rows = []
     for chan in get_run_cycle_channel_info(block, bucket_lookup):
         cc = chan["ChannelInfo"]
-        rows.append(
-            format_dict_headers({
-                **common,
-                "Channel":         chan["Channel"],
-                "Antigen":         cc.get("Antigen", ""),
-                "Clone":           cc.get("Clone", ""),
-                "DilutionFactor":  cc.get("DilutionFactor", ""),
-                "IncubationTime":  cc.get("IncubationTime", ""),
-                "ReagentExposure": cc.get("ReagentExposureTime", ""),
-                "Coefficient":     cc.get("ExposureCoefficient", ""),
-                "ActualExposure":  cc.get("ActualExposureTime", ""),
-                "ErasingMethod":   cc.get("ErasingMethod", ""),
-                "BleachingEnergy": cc.get("BleachingEnergy", ""),
-                "ValidatedFor":    cc.get("ValidatedFor", ""),
-                "Antibody": cc.get("Antibody"),
-                "AntibodyType": cc.get("AntibodyType"),
-                "HostSpecies": cc.get("HostSpecies"),
-                "Isotype": cc.get("Isotype"),
-                "Manufacturer": cc.get("Manufacturer"),
-                "Name": cc.get("Name"),
-                "OrderNumber": cc.get("OrderNumber"),
-                "Species": cc.get("Species")
-            })
+        row = create_ordered_row(
+            RunCycleNumber=run_cycle_number,
+            BlockType=block_type,
+            Antigen=cc.get("Antigen", ""),
+            Channel=chan["Channel"],
+            Magnification=magnification,
+            Clone=cc.get("Clone", ""),
+            DilutionFactor=cc.get("DilutionFactor", ""),
+            IncubationTime=cc.get("IncubationTime", ""),
+            ReagentExposure=cc.get("ReagentExposureTime", ""),
+            Coefficient=cc.get("ExposureCoefficient", ""),
+            ActualExposure=cc.get("ActualExposureTime", ""),
+            ErasingMethod=cc.get("ErasingMethod", ""),
+            BleachingEnergy=cc.get("BleachingEnergy", ""),
+            ValidatedFor=cc.get("ValidatedFor", ""),
+            Antibody=cc.get("Antibody", ""),
+            AntibodyType=cc.get("AntibodyType", ""),
+            HostSpecies=cc.get("HostSpecies", ""),
+            Isotype=cc.get("Isotype", ""),
+            Manufacturer=cc.get("Manufacturer", ""),
+            OrderNumber=cc.get("OrderNumber", ""),
+            Species=cc.get("Species", ""),
+            Name=cc.get("Name", "")
         )
+        rows.append(format_dict_headers(row))
     return rows
 
 
