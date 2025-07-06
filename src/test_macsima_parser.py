@@ -34,41 +34,47 @@ dummy_data = {
             "comment": "Standard procedure",
             "blocks": [
                 {
-                    "protocolBlockType": "protocolBlockType_Scan",
+                    "blockType": "ProtocolBlockType_Scan",
+                    "name": "Scan",
                     "comment": "Scan",
                     "magnification": "Magnification_2x",
                     "isEnabled": True,
                     "detectionSettings": [],
                 },
                 {
-                    "protocolBlockType": "protocolBlockType_DefineROIs",
+                    "blockType": "ProtocolBlockType_DefineROIs",
+                    "name": "Define ROIs",
                     "comment": "Define ROIs",
                     "isEnabled": True,
                 },
                 {
-                    "protocolBlockType": "protocolBlockType_Scan",
+                    "blockType": "ProtocolBlockType_Scan",
+                    "name": "Scan",
                     "comment": "Scan",
                     "magnification": "Magnification_20x",
                     "isEnabled": True,
                     "detectionSettings": [],
                 },
                 {
-                    "protocolBlockType": "protocolBlockType_Erase",
+                    "blockType": "ProtocolBlockType_Erase",
+                    "name": "Erase",
                     "comment": "Erase",
                     "isEnabled": True,
-                    "channels": [
-                        {"channelName": "FITC", "bleachingEnergy": 1980},
-                        {"channelName": "PE", "bleachingEnergy": 840},
-                        {"channelName": "APC", "bleachingEnergy": 780}
-                    ]
+                    "photos": {
+                        "FITC": {"fluorochromeType": "FluorochromeType_FITC", "bleachingEnergy": 1980, "isEnabled": True},
+                        "PE": {"fluorochromeType": "FluorochromeType_PE", "bleachingEnergy": 840, "isEnabled": True},
+                        "APC": {"fluorochromeType": "FluorochromeType_APC", "bleachingEnergy": 780, "isEnabled": True}
+                    }
                 },
                 {
-                    "protocolBlockType": "protocolBlockType_RestainNuclei",
+                    "blockType": "ProtocolBlockType_RestainNuclei",
+                    "name": "Restain Nuclei",
                     "comment": "Restain Nuclei",
                     "isEnabled": True,
                 },
                 {
-                    "protocolBlockType": "protocolBlockType_RunCycle",
+                    "blockType": "ProtocolBlockType_RunCycle",
+                    "name": "Run Cycle",
                     "comment": "Run Cycle",
                     "isEnabled": True,
                     "bucketIdMapping": {"DAPI": "bucket1", "FITC": "bucket2", "PE": "bucket3", "APC": "bucket4", "Vio780": "bucket5"},
@@ -127,7 +133,8 @@ dummy_data = {
                     ]
                 },
                 {
-                    "protocolBlockType": "protocolBlockType_RunCycle",
+                    "blockType": "ProtocolBlockType_RunCycle",
+                    "name": "Run Cycle",
                     "comment": "Run Cycle",
                     "isEnabled": True,
                     "bucketIdMapping": {"DAPI": "bucket1", "FITC": "bucket2", "PE": "bucket3", "APC": "bucket4", "Vio780": "bucket5"},
@@ -140,7 +147,8 @@ dummy_data = {
                     "reagents": []
                 },
                 {
-                    "protocolBlockType": "protocolBlockType_RunCycle",
+                    "blockType": "ProtocolBlockType_RunCycle",
+                    "name": "Run Cycle",
                     "comment": "Run Cycle",
                     "isEnabled": True,
                     "bucketIdMapping": {"DAPI": "bucket1", "FITC": "bucket2", "PE": "bucket3", "APC": "bucket4", "Vio780": "bucket5"},
@@ -165,10 +173,8 @@ dummy_data = {
             "name": "C Overview",
             "type": "Rectangle",
             "shape": {
-                "x": 0,
-                "y": 0,
-                "width": "19",
-                "height": "10"
+                "Type": "ShapeType_Rectangle",
+                "Data": "{\"Width\": 19, \"Height\": 10}"
             },
             "autoFocus": {
                 "method": "ImageBased"
@@ -178,10 +184,8 @@ dummy_data = {
             "name": "ROI 1",
             "type": "Rectangle",
             "shape": {
-                "x": 0,
-                "y": 0,
-                "width": "2.6345827695784165",
-                "height": "2.350855833425806"
+                "Type": "ShapeType_Rectangle",
+                "Data": "{\"Width\": 2.6345827695784165, \"Height\": 2.350855833425806}"
             },
             "autoFocus": {
                 "method": "ConstantZ"
@@ -231,6 +235,7 @@ dummy_data = {
             "species": "human"
         },
         {
+            "id": "bucket3",
             "bucketId": "bucket3",
             "antigenName": "CD56",
             "clone": "AF12-7H3",
@@ -246,6 +251,7 @@ dummy_data = {
             "species": "human"
         },
         {
+            "id": "bucket4",
             "bucketId": "bucket4",
             "antigenName": "PYGL",
             "clone": "",
@@ -261,6 +267,7 @@ dummy_data = {
             "species": "Human"
         },
         {
+            "id": "bucket5",
             "bucketId": "bucket5",
             "antigenName": "",
             "clone": "",
@@ -324,7 +331,7 @@ def test_get_running_time():
 def test_get_used_disk_space():
     """Test that the used disk space is extracted correctly."""
     extracted = mp.get_used_disk_space(data['experiments'][0])
-    expected = "178.364 KB"
+    expected = "182.645 KB"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
 
 
