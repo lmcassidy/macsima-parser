@@ -476,13 +476,13 @@ def test_get_block_name():
 def test_get_block_magnification():
     """Test that the block magnification is extracted correctly."""
     extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][0])
-    expected = "Magnification_2x"
+    expected = "2x"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
     extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][1])
     expected = "N/A"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
     extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][2])
-    expected = "Magnification_20x"
+    expected = "20x"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
     extracted = mp.get_block_magnification(data['procedures'][0]['blocks'][3])
     expected = "N/A"
