@@ -789,3 +789,301 @@ def test_add_numbers_to_run_cycles():
             assert "runCycleNumber" in block
         else:
             assert "runCycleNumber" not in block
+
+
+def test_format_column_header():
+    """Test that column headers are formatted with line breaks."""
+    # Test basic camelCase
+    assert mp.format_column_header("BleachingEnergy") == "Bleaching\nEnergy"
+    assert mp.format_column_header("DilutionFactor") == "Dilution\nFactor"
+    
+    # Test multi-word camelCase
+    assert mp.format_column_header("ActualExposureTime") == "Actual\nExposure\nTime"
+    assert mp.format_column_header("UsedDiskSpace") == "Used\nDisk\nSpace"
+    
+    # Test acronym patterns
+    assert mp.format_column_header("ROIName") == "ROI\nName"
+    assert mp.format_column_header("XMLData") == "XML\nData"
+    
+    # Test single words (no change)
+    assert mp.format_column_header("Species") == "Species"
+    assert mp.format_column_header("Height") == "Height"
+    
+    # Test empty string
+    assert mp.format_column_header("") == ""
+    
+    # Test already formatted strings
+    assert mp.format_column_header("Already\nFormatted") == "Already\nFormatted"
+
+
+def test_format_dict_headers():
+    """Test that dictionary keys are formatted with line breaks."""
+    input_dict = {
+        "BleachingEnergy": 100,
+        "DilutionFactor": 50,
+        "Species": "Human",
+        "ROIName": "Test ROI"
+    }
+    
+    expected = {
+        "Bleaching\nEnergy": 100,
+        "Dilution\nFactor": 50,
+        "Species": "Human",
+        "ROI\nName": "Test ROI"
+    }
+    
+    result = mp.format_dict_headers(input_dict)
+    assert result == expected
+    
+    # Test empty dictionary
+    assert mp.format_dict_headers({}) == {}
+    
+    # Test dictionary with single key
+    single_key_dict = {"TestKey": "value"}
+    expected_single = {"Test\nKey": "value"}
+    assert mp.format_dict_headers(single_key_dict) == expected_single
+
+
+def test_add_blank_lines_between_run_cycles():
+    """Test that blank lines are added between different run cycles."""
+    # Test with multiple run cycles
+    input_rows = [
+        {"Block\nType": "Scan", "Run\nCycle\nNumber": "", "Channel": "DAPI"},
+        {"Block\nType": "RunCycle", "Run\nCycle\nNumber": "1", "Channel": "DAPI"},
+        {"Block\nType": "RunCycle", "Run\nCycle\nNumber": "1", "Channel": "FITC"},
+        {"Block\nType": "RunCycle", "Run\nCycle\nNumber": "2", "Channel": "DAPI"},
+        {"Block\nType": "RunCycle", "Run\nCycle\nNumber": "2", "Channel": "FITC"},
+        {"Block\nType": "RunCycle", "Run\nCycle\nNumber": "3", "Channel": "DAPI"},
+    ]
+    
+    result = mp.add_blank_lines_between_run_cycles(input_rows)
+    
+    # Should have 8 rows total (6 original + 2 blank lines)
+    assert len(result) == 8
+    
+    # Check that blank lines are inserted at the right positions
+    assert result[0] == input_rows[0]  # Scan block
+    assert result[1] == input_rows[1]  # RunCycle 1, DAPI
+    assert result[2] == input_rows[2]  # RunCycle 1, FITC
+    
+    # Blank line after run cycle 1
+    assert result[3] == {"Block\nType": "", "Run\nCycle\nNumber": "", "Channel": ""}
+    
+    assert result[4] == input_rows[3]  # RunCycle 2, DAPI
+    assert result[5] == input_rows[4]  # RunCycle 2, FITC
+    
+    # Blank line after run cycle 2
+    assert result[6] == {"Block\nType": "", "Run\nCycle\nNumber": "", "Channel": ""}
+    
+    assert result[7] == input_rows[5]  # RunCycle 3, DAPI
+    
+    # Test empty list
+    assert mp.add_blank_lines_between_run_cycles([]) == []
+    
+    # Test single run cycle (no blank lines should be added)
+    single_cycle = [
+        {"Block\nType": "RunCycle", "Run\nCycle\nNumber": "1", "Channel": "DAPI"},
+        {"Block\nType": "RunCycle", "Run\nCycle\nNumber": "1", "Channel": "FITC"},
+    ]
+    result_single = mp.add_blank_lines_between_run_cycles(single_cycle)
+    assert result_single == single_cycle  # No changes
+    
+    # Test non-RunCycle blocks only
+    non_run_cycle = [
+        {"Block\nType": "Scan", "Run\nCycle\nNumber": "", "Channel": "DAPI"},
+        {"Block\nType": "Erase", "Run\nCycle\nNumber": "", "Channel": "FITC"},
+    ]
+    result_non_run = mp.add_blank_lines_between_run_cycles(non_run_cycle)
+    assert result_non_run == non_run_cycle  # No changes
+
+
+def test_get_erase_channel_info():
+    """Test that erase channel info is extracted correctly."""
+    # Test with erase block from dummy data
+    erase_block = data['procedures'][0]['blocks'][3]  # This should be an erase block
+    
+    extracted = mp.get_erase_channel_info(erase_block)
+    
+    # Should return a list of channel info dictionaries
+    assert isinstance(extracted, list)
+    assert len(extracted) == 3  # FITC, PE, APC
+    
+    # Check first channel
+    assert extracted[0]["Channel"] == "FITC"
+    assert extracted[0]["ChannelInfo"]["BleachingEnergy"] == 1980
+    
+    # Check second channel
+    assert extracted[1]["Channel"] == "PE"
+    assert extracted[1]["ChannelInfo"]["BleachingEnergy"] == 840
+    
+    # Check third channel
+    assert extracted[2]["Channel"] == "APC"
+    assert extracted[2]["ChannelInfo"]["BleachingEnergy"] == 780
+    
+    # Test with non-erase block (should return empty list)
+    scan_block = data['procedures'][0]['blocks'][0]  # This should be a scan block
+    result_non_erase = mp.get_erase_channel_info(scan_block)
+    assert result_non_erase == []
+
+
+def test_build_bucket_lookup():
+    """Test that bucket lookup is built correctly."""
+    bucket_lookup = mp.build_bucket_lookup(data)
+    
+    # Should return a dictionary (even if empty for our test data)
+    assert isinstance(bucket_lookup, dict)
+    
+    # Test with minimal data structure that has proper reagent mappings
+    test_data = {
+        "procedures": [
+            {
+                "reagents": [
+                    {"bucketId": "bucket1", "reagentId": {"itemId": "reagent1"}},
+                    {"bucketId": "bucket2", "reagentId": {"itemId": "reagent2"}},
+                ]
+            }
+        ],
+        "reagents": [
+            {
+                "id": "reagent1",
+                "antigen": "CD3",
+                "clone": "Clone1",
+                "exposureTime": 100,
+                "supportedFixationMethods": ["PFA"],
+                "antibody": "CD3_antibody",
+                "antibodyType": "monoclonal",
+                "hostSpecies": "mouse",
+                "isotype": "IgG",
+                "manufacturer": "TestCorp",
+                "name": "CD3 Antibody",
+                "orderNumber": "CD3-001",
+                "species": "human"
+            },
+            {
+                "id": "reagent2", 
+                "antigen": "CD4",
+                "clone": "Clone2",
+                "exposureTime": 120,
+                "supportedFixationMethods": ["PFA"],
+                "antibody": "CD4_antibody",
+                "antibodyType": "monoclonal",
+                "hostSpecies": "rat",
+                "isotype": "IgG2a",
+                "manufacturer": "TestCorp",
+                "name": "CD4 Antibody",
+                "orderNumber": "CD4-001",
+                "species": "human"
+            }
+        ]
+    }
+    
+    lookup = mp.build_bucket_lookup(test_data)
+    
+    # Should have mappings for both buckets
+    assert "bucket1" in lookup
+    assert "bucket2" in lookup
+    
+    # Check bucket1 mapping
+    bucket1_info = lookup["bucket1"]
+    assert bucket1_info["antigen"] == "CD3"
+    assert bucket1_info["clone"] == "Clone1"
+    assert bucket1_info["exposureTime"] == 100
+    assert bucket1_info["Antibody"] == "CD3_antibody"
+    assert bucket1_info["Manufacturer"] == "TestCorp"
+    
+    # Check bucket2 mapping
+    bucket2_info = lookup["bucket2"]
+    assert bucket2_info["antigen"] == "CD4"
+    assert bucket2_info["clone"] == "Clone2"
+    assert bucket2_info["exposureTime"] == 120
+    assert bucket2_info["AntibodyType"] == "monoclonal"
+
+
+def test_process_experiment():
+    """Test that experiment data is processed correctly with formatted headers."""
+    experiment = data['experiments'][0]
+    result = mp.process_experiment(experiment)
+    
+    # Check that result is a dictionary
+    assert isinstance(result, dict)
+    
+    # Check that headers are formatted (have line breaks)
+    expected_keys = [
+        "Experiment\nName",
+        "Start\nTime", 
+        "End\nTime",
+        "Running\nTime",
+        "Used\nDisk\nSpace"
+    ]
+    
+    for key in expected_keys:
+        assert key in result
+    
+    # Check values
+    assert result["Experiment\nName"] == "250128_liver_OCT_FCRB 1"
+    assert result["Start\nTime"] == "2025-01-28T15:53:36Z"
+    assert result["End\nTime"] == "2025-01-29T06:43:08Z"
+    assert result["Running\nTime"] == "14h 49m 27s"
+    assert result["Used\nDisk\nSpace"] == "182.645 KB"
+
+
+def test_process_rois():
+    """Test that ROI data is processed correctly with formatted headers."""
+    roi = data['rois'][0]
+    result = mp.process_rois(roi)
+    
+    # Check that result is a dictionary
+    assert isinstance(result, dict)
+    
+    # Check that headers are formatted (have line breaks)
+    expected_keys = [
+        "ROI\nName",
+        "Shape",
+        "Height", 
+        "Width",
+        "Autofocus"
+    ]
+    
+    for key in expected_keys:
+        assert key in result
+    
+    # Check values
+    assert result["ROI\nName"] == "C Overview"
+    assert result["Shape"] == "Rectangle"
+    assert result["Height"] == "10"
+    assert result["Width"] == "19"
+    assert result["Autofocus"] == "ImageBased"
+    
+    # Test with second ROI
+    roi2 = data['rois'][1]
+    result2 = mp.process_rois(roi2)
+    assert result2["ROI\nName"] == "ROI 1"
+    assert result2["Autofocus"] == "ConstantZ"
+
+
+def test_process_sample():
+    """Test that sample data is processed correctly with formatted headers."""
+    sample = data['samples'][0]
+    result = mp.process_sample(sample)
+    
+    # Check that result is a dictionary
+    assert isinstance(result, dict)
+    
+    # Check that headers are formatted (have line breaks)
+    expected_keys = [
+        "Sample\nName",
+        "Species",
+        "Type",
+        "Organ",
+        "Fixation"
+    ]
+    
+    for key in expected_keys:
+        assert key in result
+    
+    # Check values
+    assert result["Sample\nName"] == "250128_liver_OCT_FCRB"
+    assert result["Species"] == "Human"
+    assert result["Type"] == "Tissue"
+    assert result["Organ"] == "Liver"
+    assert result["Fixation"] == "PFA"
