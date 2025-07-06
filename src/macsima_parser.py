@@ -549,3 +549,4 @@ if __name__ == "__main__":
         pd.DataFrame(block_rows ).to_excel(xls, sheet_name="Blocks",     index=False)
 
     logger.info("✅ Excel report created successfully.")
+    logger.info(f"📊 Excel report saved to: {out_xlsx}")
