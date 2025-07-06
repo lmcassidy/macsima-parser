@@ -215,6 +215,7 @@ dummy_data = {
             "species": ""
         },
         {
+            "id": "bucket2",
             "bucketId": "bucket2",
             "antigenName": "TCR Vα7.2",
             "clone": "REA179",
