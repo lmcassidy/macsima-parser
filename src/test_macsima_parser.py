@@ -91,7 +91,8 @@ dummy_data = {
                             "incubationTime": 30,
                             "exposureTimeAndCoefficient": {"timeCoefficient": 0},
                             "erasingMethod": "",
-                            "bleachingEnergy": 0
+                            "bleachingEnergy": 0,
+                            "bleachingTime": 0
                         },
                         "DetectionChannel_2": {
                             "bucketId": "bucket2",
@@ -99,7 +100,8 @@ dummy_data = {
                             "incubationTime": 30,
                             "exposureTimeAndCoefficient": {"timeCoefficient": 330},
                             "erasingMethod": "ErasingMethod_Bleaching",
-                            "bleachingEnergy": 400
+                            "bleachingEnergy": 400,
+                            "bleachingTime": 15
                         },
                         "DetectionChannel_3": {
                             "bucketId": "bucket3",
@@ -107,7 +109,8 @@ dummy_data = {
                             "incubationTime": 30,
                             "exposureTimeAndCoefficient": {"timeCoefficient": 430},
                             "erasingMethod": "ErasingMethod_Bleaching",
-                            "bleachingEnergy": 160
+                            "bleachingEnergy": 160,
+                            "bleachingTime": 20
                         },
                         "DetectionChannel_4": {
                             "bucketId": "bucket4",
@@ -115,7 +118,8 @@ dummy_data = {
                             "incubationTime": 30,
                             "exposureTimeAndCoefficient": {"timeCoefficient": 100},
                             "erasingMethod": "ErasingMethod_Bleaching",
-                            "bleachingEnergy": 470
+                            "bleachingEnergy": 470,
+                            "bleachingTime": 25
                         },
                         "DetectionChannel_5": {
                             "bucketId": "bucket5",
@@ -123,7 +127,8 @@ dummy_data = {
                             "incubationTime": 30,
                             "exposureTimeAndCoefficient": {"timeCoefficient": 0},
                             "erasingMethod": "",
-                            "bleachingEnergy": 0
+                            "bleachingEnergy": 0,
+                            "bleachingTime": 0
                         }
                     }
                 },
@@ -524,6 +529,7 @@ def test_get_run_cycle_channel_info():
                 "ActualExposureTime": "",
                 "ErasingMethod": "",
                 "BleachingEnergy": 0,
+                "BleachingTime": 0,
                 "ValidatedFor": "",
                 "Antibody": "",
                 "AntibodyType": "",
@@ -547,6 +553,7 @@ def test_get_run_cycle_channel_info():
                 "ActualExposureTime": "",
                 "ErasingMethod": "Bleaching",
                 "BleachingEnergy": 400,
+                "BleachingTime": 15,
                 "ValidatedFor": "",
                 "Antibody": "",
                 "AntibodyType": "",
@@ -570,6 +577,7 @@ def test_get_run_cycle_channel_info():
                 "ActualExposureTime": "",
                 "ErasingMethod": "Bleaching",
                 "BleachingEnergy": 160,
+                "BleachingTime": 20,
                 "ValidatedFor": "",
                 "Antibody": "",
                 "AntibodyType": "",
@@ -593,6 +601,7 @@ def test_get_run_cycle_channel_info():
                 "ActualExposureTime": "",
                 "ErasingMethod": "Bleaching",
                 "BleachingEnergy": 470,
+                "BleachingTime": 25,
                 "ValidatedFor": "",
                 "Antibody": "",
                 "AntibodyType": "",
@@ -616,6 +625,7 @@ def test_get_run_cycle_channel_info():
                 "ActualExposureTime": "",
                 "ErasingMethod": "",
                 "BleachingEnergy": 0,
+                "BleachingTime": 0,
                 "ValidatedFor": "",
                 "Antibody": "",
                 "AntibodyType": "",
@@ -646,7 +656,7 @@ def test_reagent_details_extraction():
         # These fields should always be present (blank if missing in data)
         for field in [
             "Antigen", "Clone", "DilutionFactor", "IncubationTime", "ReagentExposureTime", 
-            "ExposureCoefficient", "ActualExposureTime", "ErasingMethod", "BleachingEnergy", "ValidatedFor",
+            "ExposureCoefficient", "ActualExposureTime", "ErasingMethod", "BleachingEnergy", "BleachingTime", "ValidatedFor",
             "Antibody", "AntibodyType", "HostSpecies", "Isotype", "Manufacturer", "Name", "OrderNumber", "Species"
         ]:
             assert field in info
@@ -1105,7 +1115,7 @@ def test_process_block_column_order():
     expected_order = [
         "Run\nCycle\nNumber", "Block\nType", "Antigen", "Channel", "Magnification",
         "Clone", "Dilution\nFactor", "Incubation\nTime", "Reagent\nExposure",
-        "Coefficient", "Actual\nExposure", "Erasing\nMethod", "Bleaching\nEnergy",
+        "Coefficient", "Actual\nExposure", "Erasing\nMethod", "Bleaching\nEnergy", "Bleaching\nTime",
         "Validated\nFor", "Antibody", "Antibody\nType", "Host\nSpecies", "Isotype",
         "Manufacturer", "Order\nNumber", "Species", "Name"
     ]
@@ -1120,3 +1130,38 @@ def test_process_block_column_order():
     # Should have the same column order (with most columns empty)
     actual_columns_scan = list(result_scan[0].keys())
     assert actual_columns_scan == expected_order
+
+
+def test_bleaching_time_extraction():
+    """Test that bleaching time is extracted correctly from reagents."""
+    bucket_lookup = mp.build_bucket_lookup(data)
+    
+    # Test with RunCycle block that has bleaching time data
+    run_cycle_block = data['procedures'][0]['blocks'][5]  # RunCycle block
+    extracted = mp.get_run_cycle_channel_info(run_cycle_block, bucket_lookup)
+    
+    # Should return a list of channel info dictionaries
+    assert isinstance(extracted, list)
+    assert len(extracted) == 5  # DAPI, FITC, PE, APC, Vio780
+    
+    # Check bleaching time values for each channel
+    channel_bleaching_times = {
+        "DAPI": 0,      # DetectionChannel_1
+        "FITC": 15,     # DetectionChannel_2  
+        "PE": 20,       # DetectionChannel_3
+        "APC": 25,      # DetectionChannel_4
+        "Vio780": 0     # DetectionChannel_5
+    }
+    
+    for channel_data in extracted:
+        channel_name = channel_data["Channel"]
+        expected_bleaching_time = channel_bleaching_times[channel_name]
+        actual_bleaching_time = channel_data["ChannelInfo"]["BleachingTime"]
+        
+        assert actual_bleaching_time == expected_bleaching_time, \
+            f"Channel {channel_name}: expected BleachingTime {expected_bleaching_time}, got {actual_bleaching_time}"
+    
+    # Test that BleachingTime field exists in all channels
+    for channel_data in extracted:
+        assert "BleachingTime" in channel_data["ChannelInfo"], \
+            f"BleachingTime field missing in channel {channel_data['Channel']}"

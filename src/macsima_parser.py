@@ -353,7 +353,7 @@ def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
     # Full field set (add more as needed)
     FIELDNAMES = [
         "Antigen", "Clone", "DilutionFactor", "IncubationTime", "ReagentExposureTime",
-        "ExposureCoefficient", "ActualExposureTime", "ErasingMethod", "BleachingEnergy", "ValidatedFor",
+        "ExposureCoefficient", "ActualExposureTime", "ErasingMethod", "BleachingEnergy", "BleachingTime", "ValidatedFor",
         "Antibody", "AntibodyType", "HostSpecies", "Isotype", "Manufacturer", "Name", "OrderNumber", "Species"
     ]
 
@@ -385,6 +385,7 @@ def get_run_cycle_channel_info(block: dict, bucket_lookup: dict) -> list[dict]:
                 ),
                 "ErasingMethod": dc.get("erasingMethod", "").split("_")[-1] if dc.get("erasingMethod") else "",
                 "BleachingEnergy": dc.get("bleachingEnergy", ""),
+                "BleachingTime": dc.get("bleachingTime", ""),
                 "ValidatedFor": reagent.get("supportedFixationMethods", ""),
                 "Antibody": reagent.get("Antibody", ""),
                 "AntibodyType": reagent.get("AntibodyType", ""),
@@ -511,7 +512,7 @@ def process_block(block: dict[str, Any],
         column_order = [
             "RunCycleNumber", "BlockType", "Antigen", "Channel", "Magnification",
             "Clone", "DilutionFactor", "IncubationTime", "ReagentExposure", 
-            "Coefficient", "ActualExposure", "ErasingMethod", "BleachingEnergy",
+            "Coefficient", "ActualExposure", "ErasingMethod", "BleachingEnergy", "BleachingTime",
             "ValidatedFor", "Antibody", "AntibodyType", "HostSpecies", "Isotype",
             "Manufacturer", "OrderNumber", "Species", "Name"
         ]
@@ -569,6 +570,7 @@ def process_block(block: dict[str, Any],
             ActualExposure=cc.get("ActualExposureTime", ""),
             ErasingMethod=cc.get("ErasingMethod", ""),
             BleachingEnergy=cc.get("BleachingEnergy", ""),
+            BleachingTime=cc.get("BleachingTime", ""),
             ValidatedFor=cc.get("ValidatedFor", ""),
             Antibody=cc.get("Antibody", ""),
             AntibodyType=cc.get("AntibodyType", ""),
