@@ -40,6 +40,38 @@ def format_dict_headers(data_dict: dict) -> dict:
     return {format_column_header(key): value for key, value in data_dict.items()}
 
 
+def add_blank_lines_between_run_cycles(block_rows: list[dict]) -> list[dict]:
+    """
+    Add blank lines between different run cycles in the block rows.
+    """
+    if not block_rows:
+        return block_rows
+    
+    result = []
+    prev_run_cycle = None
+    
+    for row in block_rows:
+        current_run_cycle = row.get(format_column_header("RunCycleNumber"), "")
+        
+        # If this is a new run cycle (and not the first row), add a blank line
+        if (prev_run_cycle is not None and 
+            current_run_cycle != "" and 
+            current_run_cycle != prev_run_cycle and
+            prev_run_cycle != ""):
+            
+            # Create a blank row with the same keys but empty values
+            blank_row = {key: "" for key in row.keys()}
+            result.append(blank_row)
+        
+        result.append(row)
+        
+        # Update previous run cycle number if this row has one
+        if current_run_cycle != "":
+            prev_run_cycle = current_run_cycle
+    
+    return result
+
+
 def get_input_path() -> Path:
     parser = argparse.ArgumentParser(description="MACSima JSON parser")
     parser.add_argument("json_path", nargs="?", type=Path, help="Path to input JSON file")
@@ -550,6 +582,8 @@ if __name__ == "__main__":
         for b in blocks:
             block_rows.extend(process_block(b, bucket_lookup))
 
+    # Add blank lines between different run cycles
+    block_rows = add_blank_lines_between_run_cycles(block_rows)
 
     # ---------- to Excel ---------------------------------------
     out_xlsx = json_path.with_suffix(".xlsx")
