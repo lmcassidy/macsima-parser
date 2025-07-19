@@ -499,6 +499,31 @@ def test_get_block_magnification():
     expected = "N/A"
     assert extracted == expected, f"Expected {expected}, but got {extracted}"
 
+
+def test_get_block_magnification_with_none():
+    """Test that the block magnification handles None values correctly."""
+    # Test case where magnification key exists but value is None
+    block_with_none_magnification = {
+        "blockType": "ProtocolBlockType_Scan",
+        "name": "Test Block",
+        "magnification": None
+    }
+    
+    # This should not raise an AttributeError
+    extracted = mp.get_block_magnification(block_with_none_magnification)
+    expected = "N/A"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+    
+    # Test case where magnification key doesn't exist
+    block_without_magnification = {
+        "blockType": "ProtocolBlockType_Scan",
+        "name": "Test Block"
+    }
+    
+    extracted = mp.get_block_magnification(block_without_magnification)
+    expected = "N/A"
+    assert extracted == expected, f"Expected {expected}, but got {extracted}"
+
 def test_get_erase_bleaching_energy():
     """Test that the bleaching energy per channel for erase block is extracted correctly."""
     extracted = mp.get_erase_bleaching_energy(data['procedures'][0]['blocks'][3])
