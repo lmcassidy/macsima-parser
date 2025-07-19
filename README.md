@@ -98,6 +98,9 @@ Open it in Excel, Google Sheets, or similar!
 ## Run Tests (Optional)
 
 If you want to make sure the parser works correctly, you can run:
+```sh
+pip install pytest
+```
 
 ```sh
 pytest src/test_macsima_parser.py
