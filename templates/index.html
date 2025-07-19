@@ -12,74 +12,68 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 24px;
+            line-height: 1.5;
         }
         
         .container {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            max-width: 600px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            padding: 48px;
+            max-width: 480px;
             width: 100%;
             text-align: center;
         }
         
         .logo {
-            font-size: 2.5em;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-weight: 700;
+            font-size: 24px;
+            color: #212529;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
         
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1.1em;
+            color: #6c757d;
+            margin-bottom: 32px;
+            font-size: 15px;
         }
         
         .upload-area {
-            border: 3px dashed #667eea;
-            border-radius: 15px;
-            padding: 40px 20px;
-            margin: 30px 0;
-            background: #f8f9ff;
-            transition: all 0.3s ease;
+            border: 2px dashed #dee2e6;
+            border-radius: 6px;
+            padding: 48px 24px;
+            margin: 24px 0;
+            background: #f8f9fa;
+            transition: all 0.2s ease;
             cursor: pointer;
         }
         
         .upload-area:hover {
-            border-color: #764ba2;
-            background: #f0f1ff;
+            border-color: #adb5bd;
+            background: #f1f3f4;
         }
         
         .upload-area.dragover {
-            border-color: #764ba2;
-            background: #e8eaff;
-            transform: scale(1.02);
-        }
-        
-        .upload-icon {
-            font-size: 3em;
-            color: #667eea;
-            margin-bottom: 15px;
+            border-color: #6c757d;
+            background: #e9ecef;
         }
         
         .upload-text {
-            color: #333;
-            font-size: 1.1em;
-            margin-bottom: 10px;
+            color: #495057;
+            font-size: 15px;
+            margin-bottom: 4px;
         }
         
         .upload-subtext {
-            color: #888;
-            font-size: 0.9em;
+            color: #6c757d;
+            font-size: 13px;
         }
         
         .file-input {
@@ -87,95 +81,67 @@
         }
         
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #212529;
             color: white;
             border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-size: 1em;
-            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            margin-top: 20px;
+            transition: background 0.2s ease;
+            margin-top: 16px;
         }
         
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        .btn:hover:not(:disabled) {
+            background: #343a40;
+        }
+        
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
         }
         
         .selected-file {
-            background: #e8f5e8;
-            border: 2px solid #4caf50;
-            color: #2e7d32;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            font-weight: 600;
+            background: #d1edff;
+            border: 1px solid #0066cc;
+            color: #0066cc;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 16px 0;
+            font-size: 14px;
         }
         
         .flash-messages {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         
         .flash-error {
-            background: #ffebee;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #c62828;
-            margin-bottom: 15px;
-        }
-        
-        .features {
-            text-align: left;
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 1px solid #eee;
-        }
-        
-        .features h3 {
-            color: #333;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        
-        .features ul {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .features li {
-            padding: 8px 0;
-            color: #666;
-            display: flex;
-            align-items: center;
-        }
-        
-        .features li:before {
-            content: "✓";
-            color: #4caf50;
-            font-weight: bold;
-            margin-right: 10px;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 16px;
+            font-size: 14px;
         }
         
         .processing {
             display: none;
-            color: #667eea;
-            margin-top: 20px;
+            color: #6c757d;
+            margin-top: 16px;
+            font-size: 14px;
         }
         
         .spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #dee2e6;
+            border-top: 2px solid #6c757d;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-right: 10px;
+            margin-right: 8px;
         }
         
         @keyframes spin {
@@ -185,23 +151,19 @@
         
         @media (max-width: 600px) {
             .container {
-                padding: 20px;
-            }
-            
-            .logo {
-                font-size: 2em;
+                padding: 32px 24px;
             }
             
             .upload-area {
-                padding: 30px 15px;
+                padding: 40px 16px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">🧬 MACSima Parser</div>
-        <div class="subtitle">Convert your MACSima JSON data to Excel reports instantly</div>
+        <div class="logo">MACSima Parser</div>
+        <div class="subtitle">Convert JSON to Excel</div>
         
         {% with messages = get_flashed_messages() %}
             {% if messages %}
@@ -215,9 +177,8 @@
         
         <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
             <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">Click to select or drag & drop your JSON file</div>
-                <div class="upload-subtext">Supports .json files up to 16MB</div>
+                <div class="upload-text">Drop JSON file here or click to browse</div>
+                <div class="upload-subtext">Maximum 16MB</div>
                 <input type="file" id="fileInput" name="file" accept=".json" class="file-input">
             </div>
             
@@ -226,25 +187,14 @@
             </div>
             
             <button type="submit" class="btn" id="submitBtn" disabled>
-                Convert to Excel
+                Convert
             </button>
             
             <div id="processing" class="processing">
                 <div class="spinner"></div>
-                Processing your file...
+                Processing...
             </div>
         </form>
-        
-        <div class="features">
-            <h3>What you get:</h3>
-            <ul>
-                <li>Experiment summary with timing and disk usage</li>
-                <li>ROI details with dimensions and autofocus settings</li>
-                <li>Sample information including species and fixation</li>
-                <li>Detailed protocol blocks with reagent information</li>
-                <li>Clean Excel format with multiple organized sheets</li>
-            </ul>
-        </div>
     </div>
 
     <script>
