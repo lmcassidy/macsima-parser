@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MACSima Parser - JSON to Excel Converter</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            padding: 48px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            color: #212529;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            color: #6c757d;
+            margin-bottom: 32px;
+            font-size: 15px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 6px;
+            padding: 48px 24px;
+            margin: 24px 0;
+            background: #f8f9fa;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #adb5bd;
+            background: #f1f3f4;
+        }
+        
+        .upload-area.dragover {
+            border-color: #6c757d;
+            background: #e9ecef;
+        }
+        
+        .upload-text {
+            color: #495057;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+        
+        .upload-subtext {
+            color: #6c757d;
+            font-size: 13px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: #212529;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            margin-top: 16px;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: #343a40;
+        }
+        
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .selected-file {
+            background: #d1edff;
+            border: 1px solid #0066cc;
+            color: #0066cc;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+        
+        .flash-messages {
+            margin-bottom: 16px;
+        }
+        
+        .flash-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        .processing {
+            display: none;
+            color: #6c757d;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #dee2e6;
+            border-top: 2px solid #6c757d;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 32px 24px;
+            }
+            
+            .upload-area {
+                padding: 40px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">MACSima Parser</div>
+        <div class="subtitle">Convert JSON to Excel</div>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-error">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-text">Drop JSON file here or click to browse</div>
+                <div class="upload-subtext">Maximum 16MB</div>
+                <input type="file" id="fileInput" name="file" accept=".json" class="file-input">
+            </div>
+            
+            <div id="selectedFile" class="selected-file" style="display: none;">
+                <span id="fileName"></span>
+            </div>
+            
+            <button type="submit" class="btn" id="submitBtn" disabled>
+                Convert
+            </button>
+            
+            <div id="processing" class="processing">
+                <div class="spinner"></div>
+                Processing...
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const selectedFile = document.getElementById('selectedFile');
+        const fileName = document.getElementById('fileName');
+        const submitBtn = document.getElementById('submitBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const processing = document.getElementById('processing');
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File selection handler
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                handleFileSelection(file);
+            }
+        });
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === 'application/json' || file.name.endsWith('.json')) {
+                    fileInput.files = files;
+                    handleFileSelection(file);
+                } else {
+                    alert('Please select a JSON file.');
+                }
+            }
+        });
+
+        function handleFileSelection(file) {
+            fileName.textContent = `Selected: ${file.name} (${formatFileSize(file.size)})`;
+            selectedFile.style.display = 'block';
+            submitBtn.disabled = false;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Form submission handler
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            submitBtn.style.display = 'none';
+            processing.style.display = 'block';
+            
+            // Create FormData and submit via fetch
+            const formData = new FormData(uploadForm);
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                } else {
+                    throw new Error('Upload failed');
+                }
+            })
+            .then(blob => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `${fileInput.files[0].name.replace('.json', '')}_report.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                // Reset form
+                resetForm();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error processing file. Please try again.');
+                resetForm();
+            });
+        });
+        
+        function resetForm() {
+            submitBtn.style.display = 'inline-block';
+            processing.style.display = 'none';
+            submitBtn.disabled = true;
+            selectedFile.style.display = 'none';
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
