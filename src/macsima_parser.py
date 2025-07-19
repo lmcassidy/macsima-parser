@@ -290,9 +290,9 @@ def get_block_magnification(block: dict[str, Any]) -> str:
     """Return the block magnification with 'Magnification_' prefix removed."""
     logger.debug(f"Block keys: {block.keys()}")
     magnification = block.get("magnification", "N/A")
-    if magnification != "N/A" and magnification.startswith("Magnification_"):
+    if magnification is not None and magnification != "N/A" and magnification.startswith("Magnification_"):
         return magnification.replace("Magnification_", "")
-    return magnification
+    return magnification if magnification is not None else "N/A"
 
 def get_erase_bleaching_energy(block: dict[str, Any]) -> list[dict[str, Any]] | str:
     if block.get("blockType") != "ProtocolBlockType_Erase":
