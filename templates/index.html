@@ -311,10 +311,54 @@
         }
 
         // Form submission handler
-        uploadForm.addEventListener('submit', function() {
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
             submitBtn.style.display = 'none';
             processing.style.display = 'block';
+            
+            // Create FormData and submit via fetch
+            const formData = new FormData(uploadForm);
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                } else {
+                    throw new Error('Upload failed');
+                }
+            })
+            .then(blob => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `${fileInput.files[0].name.replace('.json', '')}_report.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                // Reset form
+                resetForm();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error processing file. Please try again.');
+                resetForm();
+            });
         });
+        
+        function resetForm() {
+            submitBtn.style.display = 'inline-block';
+            processing.style.display = 'none';
+            submitBtn.disabled = true;
+            selectedFile.style.display = 'none';
+            fileInput.value = '';
+        }
     </script>
 </body>
 </html>
