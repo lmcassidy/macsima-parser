@@ -45,8 +45,10 @@ Link to tutorial for more info e.g. how to see active env
 With your environment activated, install the required libraries:
 
 ```sh
-pip install pandas xlsxwriter
+pip install -r requirements.txt
 ```
+
+This will install pandas, xlsxwriter, flask, and werkzeug (for the web interface).
 
 ### 1.6 Download this code
 
@@ -55,11 +57,28 @@ Unzip it to a folder of your choice.
 
 ---
 
-## 2. Run the parser
+## 2. Usage Options
 
-### 2.1 Open a Terminal / Command Prompt
+You can use MACSima Parser in two ways:
 
-* **Windows:** Open “Anaconda Prompt” (if you have Anaconda/Miniconda), or just “Command Prompt”.
+### Option A: Web Interface (Recommended for most users)
+
+1. **Start the web app:**
+   ```sh
+   python app.py
+   ```
+
+2. **Open your browser** and go to: `http://localhost:5000`
+
+3. **Upload your JSON file** using the drag-and-drop interface
+
+4. **Download your Excel report** automatically
+
+### Option B: Command Line (For advanced users)
+
+#### 2.1 Open a Terminal / Command Prompt
+
+* **Windows:** Open "Anaconda Prompt" (if you have Anaconda/Miniconda), or just "Command Prompt".
 * **macOS:** Open Terminal.
 * **Linux:** Open your favorite Terminal.
 
@@ -70,11 +89,7 @@ e.g.
 cd /Users/username/folder/path/to/macsima-parser-main
 ```
 
----
-
-### 2.2 Prepare your data
-
-Create folder called `data` and put your MACsima .json file(s) into it.
+#### 2.2 Prepare your data
 
 Copy your `.json` MACSima file to the same folder as this script, or note its path.
 
@@ -86,7 +101,7 @@ change it to:
 
 `my_data.json` or `my-data.json`
 
-### 2.3 Run the code
+#### 2.3 Run the code
 
 In Terminal/Command Prompt, run:
 
@@ -100,6 +115,18 @@ If you forget the file path, the program will **ask you to enter it**.
 A new Excel file (with the same name as your JSON file, but ending with `.xlsx`) will be created in the same folder.
 
 Open it in Excel, Google Sheets, or similar!
+
+---
+
+## 3. Online Deployment (Optional)
+
+Want to share this tool with others? You can deploy it for free on Render:
+
+1. **Push your code to GitHub**
+2. **Connect to Render** at https://render.com
+3. **Deploy as a web service**
+
+See `DEPLOYMENT.md` for detailed instructions.
 
 ---
 
@@ -118,10 +145,12 @@ pytest src/test_macsima_parser.py
 
 ## Troubleshooting
 
-* **“python: command not found”**
+* **"python: command not found"**
   Make sure you installed Python and followed step 1.
-* **“No module named pandas” or similar**
-  Make sure you ran the `pip install pandas xlsxwriter` command with your environment activated.
+* **"No module named pandas" or similar**
+  Make sure you ran the `pip install -r requirements.txt` command with your environment activated.
+* **Web interface not loading**
+  Make sure you have activated your conda environment before running `python app.py`.
 * **Excel file not created**
   Double-check that your input JSON file is correct and in the right location.
 * **Any errors?**
