@@ -81,26 +81,47 @@ def upload_file():
         return redirect(request.url)
     
     if file and allowed_file(file.filename):
+        temp_json_path = None
+        excel_path = None
         try:
             # Create temporary file for uploaded JSON
             with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as temp_json:
-                file.save(temp_json.name)
+                temp_json_path = temp_json.name
+                file.save(temp_json_path)
                 
-                # Process the JSON file
-                excel_path = process_json_to_excel(temp_json.name)
-                
-                # Clean up temporary JSON file
-                os.unlink(temp_json.name)
-                
-                # Send the Excel file to user
-                return send_file(
-                    excel_path,
-                    as_attachment=True,
-                    download_name=f"{Path(file.filename).stem}_report.xlsx",
-                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
+            # Process the JSON file
+            excel_path = process_json_to_excel(temp_json_path)
+            
+            # Send the Excel file to user
+            response = send_file(
+                excel_path,
+                as_attachment=True,
+                download_name=f"{Path(file.filename).stem}_report.xlsx",
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            
+            # Schedule cleanup after response is sent
+            @response.call_on_close
+            def cleanup():
+                try:
+                    if temp_json_path and os.path.exists(temp_json_path):
+                        os.unlink(temp_json_path)
+                    if excel_path and os.path.exists(excel_path):
+                        os.unlink(excel_path)
+                except Exception as e:
+                    logger.warning(f"Failed to cleanup temporary files: {e}")
+            
+            return response
                 
         except Exception as e:
+            # Cleanup on error
+            try:
+                if temp_json_path and os.path.exists(temp_json_path):
+                    os.unlink(temp_json_path)
+                if excel_path and os.path.exists(excel_path):
+                    os.unlink(excel_path)
+            except:
+                pass
             flash(f'Error processing file: {str(e)}')
             return redirect(url_for('index'))
     else:
