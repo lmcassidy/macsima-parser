@@ -78,6 +78,14 @@ Create folder called `data` and put your MACsima .json file(s) into it.
 
 Copy your `.json` MACSima file to the same folder as this script, or note its path.
 
+Note: check if your file names have any whitespace and remove it if so. e.g. if your file name is:
+
+`my data.json`
+
+change it to:
+
+`my_data.json` or `my-data.json`
+
 ### 2.3 Run the code
 
 In Terminal/Command Prompt, run:
