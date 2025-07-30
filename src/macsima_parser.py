@@ -202,8 +202,39 @@ def get_roi_shape_height(roi):
     try:
         shape_data_str = roi.get('shape', {}).get('Data', '{}')
         shape_data = json.loads(shape_data_str)
-        height = shape_data.get('Height')
-    except (json.JSONDecodeError, TypeError) as e:
+        
+        # Handle different shape data formats
+        if isinstance(shape_data, dict):
+            # Rectangle ROI - has Height and Width keys
+            height = shape_data.get('Height')
+            if height is None:
+                height = "N/A"
+        elif isinstance(shape_data, list):
+            # Polygon ROI - list of points, calculate bounding box height
+            if not shape_data:
+                height = "N/A"
+            else:
+                # Extract Y coordinates and calculate bounding box height
+                y_coords = []
+                for point in shape_data:
+                    if isinstance(point, dict):
+                        # Handle both {"X": x, "Y": y} and {"x": x, "y": y} formats
+                        y = point.get('Y') or point.get('y')
+                        if y is not None:
+                            y_coords.append(float(y))
+                    elif isinstance(point, (int, float)):
+                        # Handle flat list format [x1, y1, x2, y2, ...]
+                        # This is more complex, skip for now
+                        pass
+                
+                if y_coords:
+                    height = max(y_coords) - min(y_coords)
+                else:
+                    height = "N/A"
+        else:
+            height = "N/A"
+            
+    except (json.JSONDecodeError, TypeError, AttributeError) as e:
         height = "Unknown height"
         logger.warning(f"Error decoding JSON or accessing height: {e}")
     return str(height)
@@ -213,8 +244,39 @@ def get_roi_shape_width(roi):
     try:
         shape_data_str = roi.get('shape', {}).get('Data', '{}')
         shape_data = json.loads(shape_data_str)
-        width = shape_data.get('Width')
-    except (json.JSONDecodeError, TypeError) as e:
+        
+        # Handle different shape data formats
+        if isinstance(shape_data, dict):
+            # Rectangle ROI - has Height and Width keys
+            width = shape_data.get('Width')
+            if width is None:
+                width = "N/A"
+        elif isinstance(shape_data, list):
+            # Polygon ROI - list of points, calculate bounding box width
+            if not shape_data:
+                width = "N/A"
+            else:
+                # Extract X coordinates and calculate bounding box width
+                x_coords = []
+                for point in shape_data:
+                    if isinstance(point, dict):
+                        # Handle both {"X": x, "Y": y} and {"x": x, "y": y} formats
+                        x = point.get('X') or point.get('x')
+                        if x is not None:
+                            x_coords.append(float(x))
+                    elif isinstance(point, (int, float)):
+                        # Handle flat list format [x1, y1, x2, y2, ...]
+                        # This is more complex, skip for now
+                        pass
+                
+                if x_coords:
+                    width = max(x_coords) - min(x_coords)
+                else:
+                    width = "N/A"
+        else:
+            width = "N/A"
+            
+    except (json.JSONDecodeError, TypeError, AttributeError) as e:
         width = "Unknown width"
         logger.warning(f"Error decoding JSON or accessing width: {e}")
     return str(width)
