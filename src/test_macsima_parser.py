@@ -1296,9 +1296,9 @@ def test_malformed_roi_data():
         "autoFocus": {"method": "AutofocusMethod_ImageBased"}
     }
     
-    # Should not crash
+    # Should not crash - missing Data field defaults to empty dict, so Height/Width will be None -> "N/A"
     height = mp.get_roi_shape_height(missing_data_roi)
     width = mp.get_roi_shape_width(missing_data_roi)
     
-    assert height == "Unknown height" 
-    assert width == "Unknown width"
+    assert height == "N/A" 
+    assert width == "N/A"
