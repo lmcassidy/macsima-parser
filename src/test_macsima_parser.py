@@ -1190,3 +1190,115 @@ def test_bleaching_time_extraction():
     for channel_data in extracted:
         assert "BleachingTime" in channel_data["ChannelInfo"], \
             f"BleachingTime field missing in channel {channel_data['Channel']}"
+
+
+def test_polygon_roi_handling():
+    """Test that polygon ROIs are handled correctly without crashing."""
+    # Create a polygon ROI similar to what causes the error
+    polygon_roi = {
+        "name": "Polygon ROI",
+        "type": "Polygon",
+        "shape": {
+            "Type": "ShapeType_Polygon",
+            "Data": '[{"X": 100.0, "Y": 100.0}, {"X": 200.0, "Y": 100.0}, {"X": 150.0, "Y": 200.0}]'
+        },
+        "autoFocus": {
+            "method": "AutofocusMethod_ImageBased"
+        }
+    }
+    
+    # These functions should not crash when called with polygon ROI
+    name = mp.get_roi_name(polygon_roi)
+    assert name == "Polygon ROI"
+    
+    shape_type = mp.get_roi_shape_type(polygon_roi)
+    assert shape_type == "Polygon"
+    
+    # These should handle polygon data gracefully (not crash)
+    height = mp.get_roi_shape_height(polygon_roi)
+    width = mp.get_roi_shape_width(polygon_roi)
+    
+    # Should return some reasonable value (not crash)
+    assert height is not None
+    assert width is not None
+    assert isinstance(height, str)
+    assert isinstance(width, str)
+    
+    autofocus = mp.get_autofocus_method(polygon_roi)
+    assert autofocus == "ImageBased"
+
+
+def test_polygon_roi_with_different_formats():
+    """Test polygon ROIs with different data formats that might exist."""
+    # Test polygon with list of coordinates (the format that causes the error)
+    polygon_roi_list = {
+        "name": "Polygon List",
+        "shape": {
+            "Type": "ShapeType_Polygon", 
+            "Data": '[100.0, 100.0, 200.0, 100.0, 150.0, 200.0]'  # Flat list format
+        },
+        "autoFocus": {"method": "AutofocusMethod_ConstantZ"}
+    }
+    
+    # Should not crash
+    height = mp.get_roi_shape_height(polygon_roi_list)
+    width = mp.get_roi_shape_width(polygon_roi_list)
+    
+    assert height is not None
+    assert width is not None
+    assert isinstance(height, str)
+    assert isinstance(width, str)
+    
+    # Test polygon with object format
+    polygon_roi_objects = {
+        "name": "Polygon Objects",
+        "shape": {
+            "Type": "ShapeType_Polygon",
+            "Data": '[{"x": 10, "y": 20}, {"x": 30, "y": 40}, {"x": 50, "y": 60}]'
+        },
+        "autoFocus": {"method": "AutofocusMethod_Laser"}
+    }
+    
+    # Should not crash
+    height = mp.get_roi_shape_height(polygon_roi_objects)
+    width = mp.get_roi_shape_width(polygon_roi_objects)
+    
+    assert height is not None
+    assert width is not None
+
+
+def test_malformed_roi_data():
+    """Test that malformed ROI data is handled gracefully."""
+    # Test with invalid JSON in Data field
+    invalid_json_roi = {
+        "name": "Invalid JSON",
+        "shape": {
+            "Type": "ShapeType_Rectangle",
+            "Data": '{"Width": invalid, "Height": also_invalid}'
+        },
+        "autoFocus": {"method": "AutofocusMethod_ImageBased"}
+    }
+    
+    # Should not crash, should return error message
+    height = mp.get_roi_shape_height(invalid_json_roi)
+    width = mp.get_roi_shape_width(invalid_json_roi)
+    
+    assert height == "Unknown height"
+    assert width == "Unknown width"
+    
+    # Test with missing Data field
+    missing_data_roi = {
+        "name": "Missing Data",
+        "shape": {
+            "Type": "ShapeType_Rectangle"
+            # No Data field
+        },
+        "autoFocus": {"method": "AutofocusMethod_ImageBased"}
+    }
+    
+    # Should not crash - missing Data field defaults to empty dict, so Height/Width will be None -> "N/A"
+    height = mp.get_roi_shape_height(missing_data_roi)
+    width = mp.get_roi_shape_width(missing_data_roi)
+    
+    assert height == "N/A" 
+    assert width == "N/A"
