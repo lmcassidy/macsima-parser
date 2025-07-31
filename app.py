@@ -91,14 +91,18 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        flash('No file selected')
-        return redirect(request.url)
+        return jsonify({
+            'error': True,
+            'message': 'No file selected'
+        }), 400
     
     file = request.files['file']
     
     if file.filename == '':
-        flash('No file selected')
-        return redirect(request.url)
+        return jsonify({
+            'error': True,
+            'message': 'No file selected'
+        }), 400
     
     if file and allowed_file(file.filename):
         temp_json_path = None
@@ -153,8 +157,11 @@ def upload_file():
                 'message': error_message
             }), 400
     else:
-        flash('Invalid file type. Please upload a JSON file.')
-        return redirect(url_for('index'))
+        # Return JSON error for invalid file type
+        return jsonify({
+            'error': True,
+            'message': 'Invalid file type. Please upload a JSON file.'
+        }), 400
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
