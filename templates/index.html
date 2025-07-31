@@ -41,8 +41,32 @@
         
         .subtitle {
             color: #6c757d;
-            margin-bottom: 32px;
+            margin-bottom: 16px;
             font-size: 15px;
+        }
+        
+        .format-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #495057;
+        }
+        
+        .format-info summary {
+            cursor: pointer;
+            font-weight: 500;
+            color: #212529;
+            margin-bottom: 8px;
+        }
+        
+        .format-info code {
+            background: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 12px;
         }
         
         .upload-area {
@@ -126,6 +150,28 @@
             font-size: 14px;
         }
         
+        .error-message {
+            margin-bottom: 8px;
+        }
+        
+        .error-report-link {
+            display: inline-block;
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 13px;
+            margin-top: 8px;
+            padding: 4px 8px;
+            border: 1px solid #0066cc;
+            border-radius: 4px;
+            background: rgba(0, 102, 204, 0.1);
+            transition: background 0.2s ease;
+        }
+        
+        .error-report-link:hover {
+            background: rgba(0, 102, 204, 0.2);
+            text-decoration: none;
+        }
+        
         .processing {
             display: none;
             color: #6c757d;
@@ -165,11 +211,36 @@
         <div class="logo">MACSima Parser</div>
         <div class="subtitle">Convert JSON to Excel</div>
         
+        <details class="format-info">
+            <summary>📋 JSON Format Requirements</summary>
+            <p>Your JSON file must contain these top-level fields:</p>
+            <ul style="margin: 8px 0; padding-left: 20px; text-align: left;">
+                <li><code>experiments</code> - Array of experiment objects</li>
+                <li><code>procedures</code> - Array of procedure objects with blocks</li>
+                <li><code>racks</code> - Array of rack objects</li>
+                <li><code>rois</code> - Array of region of interest objects</li>
+                <li><code>samples</code> - Array of sample objects</li>
+            </ul>
+            <p style="margin-top: 12px;"><strong>Example structure:</strong></p>
+            <pre style="background: #e9ecef; padding: 8px; border-radius: 3px; margin: 8px 0; font-size: 11px; overflow-x: auto; text-align: left;">{
+  "experiments": [{"name": "Test", ...}],
+  "procedures": [{"blocks": [...]}],
+  "racks": [{"name": "Rack1"}],
+  "rois": [{"name": "ROI1", "shape": {...}}],
+  "samples": [{"name": "Sample1", ...}]
+}</pre>
+        </details>
+        
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 <div class="flash-messages">
                     {% for message in messages %}
-                        <div class="flash-error">{{ message }}</div>
+                        <div class="flash-error">
+                            <div class="error-message">{{ message }}</div>
+                            <a href="#" class="error-report-link" onclick="reportError('{{ message|e }}')">
+                                📋 Report this error
+                            </a>
+                        </div>
                     {% endfor %}
                 </div>
             {% endif %}
@@ -276,9 +347,21 @@
             })
             .then(response => {
                 if (response.ok) {
-                    return response.blob();
+                    // Check if response is JSON (error) or blob (success)
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Processing failed');
+                        });
+                    } else {
+                        return response.blob();
+                    }
                 } else {
-                    throw new Error('Upload failed');
+                    // Parse error response as JSON
+                    return response.json().then(data => {
+                        // Throw error with detailed message
+                        throw new Error(data.message || 'Upload failed');
+                    });
                 }
             })
             .then(blob => {
@@ -297,7 +380,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error processing file. Please try again.');
+                showClientError(error.message || 'Error processing file. Please try again.');
                 resetForm();
             });
         });
@@ -308,6 +391,47 @@
             submitBtn.disabled = true;
             selectedFile.style.display = 'none';
             fileInput.value = '';
+        }
+        
+        function showClientError(errorMessage) {
+            // Remove any existing client error messages
+            const existingError = document.getElementById('clientError');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Create error message element
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'clientError';
+            errorDiv.className = 'flash-error';
+            errorDiv.innerHTML = `
+                <div class="error-message">${errorMessage}</div>
+                <a href="#" class="error-report-link" onclick="reportError('${errorMessage.replace(/'/g, "\\'")}')">
+                    📋 Report this error
+                </a>
+            `;
+            
+            // Insert before the form
+            const container = document.querySelector('.container');
+            const form = document.getElementById('uploadForm');
+            container.insertBefore(errorDiv, form);
+        }
+        
+        function reportError(errorMessage) {
+            const issueTitle = encodeURIComponent('MACSima Parser Error');
+            const issueBody = encodeURIComponent(`**Error Message:**
+${errorMessage}
+
+**Please attach:**
+- Your JSON file (if you're comfortable sharing it)
+- Screenshot of the error
+- Any other relevant information
+
+**Browser:** ${navigator.userAgent}
+**Timestamp:** ${new Date().toISOString()}`);
+            
+            const githubUrl = `https://github.com/lmcassidy/macsima_data_processing/issues/new?title=${issueTitle}&body=${issueBody}`;
+            window.open(githubUrl, '_blank');
         }
     </script>
 </body>

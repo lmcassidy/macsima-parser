@@ -1302,3 +1302,122 @@ def test_malformed_roi_data():
     
     assert height == "N/A" 
     assert width == "N/A"
+
+
+# Note: Flask app error handling tests would require Flask dependency
+# Testing will be done manually by running the web application
+
+
+def test_sample_files_trigger_expected_errors():
+    """Test that our test sample files trigger the expected errors"""
+    import os
+    
+    # Test empty JSON file - should trigger JSONDecodeError
+    empty_file = "../data/test-samples/invalid_empty.json"
+    if os.path.exists(empty_file):
+        with pytest.raises(json.JSONDecodeError):
+            mp.load_json(empty_file)
+    
+    # Test plain text file - should trigger JSONDecodeError
+    text_file = "../data/test-samples/definitely_not_json.json"
+    if os.path.exists(text_file):
+        with pytest.raises(json.JSONDecodeError):
+            mp.load_json(text_file)
+    
+    # Test syntax error file - should trigger JSONDecodeError
+    syntax_file = "../data/test-samples/invalid_syntax_error.json"
+    if os.path.exists(syntax_file):
+        with pytest.raises(json.JSONDecodeError):
+            mp.load_json(syntax_file)
+
+
+def test_missing_key_fields_trigger_keyerror():
+    """Test that files with missing required fields trigger KeyError"""
+    import os
+    
+    # Test file with no experiments field
+    missing_key_file = "../data/test-samples/missing_key_fields.json"
+    if os.path.exists(missing_key_file):
+        data = mp.load_json(missing_key_file)  # Should load JSON successfully
+        
+        # But processing experiments should fail
+        with pytest.raises(KeyError):
+            exp_rows = [mp.process_experiment(e) for e in data["experiments"]]
+    
+    # Test file missing experiments field
+    missing_exp_file = "../data/test-samples/missing_experiments.json"
+    if os.path.exists(missing_exp_file):
+        data = mp.load_json(missing_exp_file)  # Should load JSON successfully
+        
+        # But accessing experiments should fail
+        with pytest.raises(KeyError):
+            exp_rows = [mp.process_experiment(e) for e in data["experiments"]]
+    
+    # Test file missing procedures field
+    missing_proc_file = "../data/test-samples/missing_procedures.json"
+    if os.path.exists(missing_proc_file):
+        data = mp.load_json(missing_proc_file)  # Should load JSON successfully
+        
+        # But accessing procedures should fail
+        with pytest.raises(KeyError):
+            blocks = data["procedures"]
+
+
+def test_valid_sample_files_process_successfully():
+    """Test that valid sample files process without errors"""
+    import os
+    
+    # Test minimal valid file
+    minimal_file = "../data/test-samples/valid_minimal_sample.json"
+    if os.path.exists(minimal_file):
+        data = mp.load_json(minimal_file)  # Should load successfully
+        bucket_lookup = mp.build_bucket_lookup(data)  # Should build successfully
+        
+        # Should process experiments without error
+        exp_rows = [mp.process_experiment(e) for e in data["experiments"]]
+        assert len(exp_rows) == 1
+        assert exp_rows[0]["ExperimentName"] == "Test Experiment"
+        
+        # Should process procedures without error
+        for proc in data["procedures"]:
+            blocks = mp.add_numbers_to_run_cycles(proc["blocks"])
+            blocks = mp.propagate_magnification(blocks)
+            for b in blocks:
+                block_rows = mp.process_block(b, bucket_lookup)
+                assert len(block_rows) > 0
+
+
+def test_flask_error_message_function():
+    """Test the user-friendly error message function"""
+    import sys
+    import os
+    
+    # Add the parent directory to the path to import from app.py
+    parent_dir = os.path.join(os.path.dirname(__file__), '..')
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+    
+    try:
+        from app import get_user_friendly_error_message
+        
+        # Test JSON decode error
+        json_error = json.JSONDecodeError("Expecting value", "test", 0)
+        message = get_user_friendly_error_message(json_error, "test.json")
+        assert "not valid json" in message.lower()
+        assert "test.json" in message
+        
+        # Test KeyError
+        key_error = KeyError("experiments")
+        message = get_user_friendly_error_message(key_error, "test.json")
+        assert "missing the required 'experiments' field" in message.lower()
+        assert "test.json" in message
+        
+        # Test generic error
+        generic_error = Exception("Something went wrong")
+        message = get_user_friendly_error_message(generic_error, "test.json")
+        assert "unexpected error occurred" in message.lower()
+        assert "test.json" in message
+        
+    except ImportError:
+        # Skip this test if Flask dependencies are not available
+        pytest.skip("Flask dependencies not available for testing")
