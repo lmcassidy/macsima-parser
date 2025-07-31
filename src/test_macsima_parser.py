@@ -1409,7 +1409,7 @@ def test_flask_error_message_function():
         # Test KeyError
         key_error = KeyError("experiments")
         message = get_user_friendly_error_message(key_error, "test.json")
-        assert "missing required data fields" in message.lower()
+        assert "missing the required 'experiments' field" in message.lower()
         assert "test.json" in message
         
         # Test generic error
