@@ -320,6 +320,7 @@
                     // Try to parse error response as JSON
                     return response.json().then(data => {
                         console.log('Error JSON response:', data);
+                        console.log('Error message:', data.message);
                         throw new Error(data.message || 'Upload failed');
                     }).catch(jsonError => {
                         console.log('Failed to parse error JSON:', jsonError);
