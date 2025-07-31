@@ -1403,7 +1403,7 @@ def test_flask_error_message_function():
         # Test JSON decode error
         json_error = json.JSONDecodeError("Expecting value", "test", 0)
         message = get_user_friendly_error_message(json_error, "test.json")
-        assert "not valid JSON" in message.lower()
+        assert "not valid json" in message.lower()
         assert "test.json" in message
         
         # Test KeyError
