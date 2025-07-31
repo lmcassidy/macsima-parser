@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, render_template, flash, redirect, url_for
+from flask import Flask, request, send_file, render_template, flash, redirect, url_for, jsonify
 import os
 import tempfile
 from pathlib import Path
