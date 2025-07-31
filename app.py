@@ -122,7 +122,10 @@ def upload_file():
                     os.unlink(excel_path)
             except:
                 pass
-            flash(f'Error processing file: {str(e)}')
+            
+            # Provide user-friendly error messages
+            error_message = get_user_friendly_error_message(e, file.filename)
+            flash(error_message)
             return redirect(url_for('index'))
     else:
         flash('Invalid file type. Please upload a JSON file.')
