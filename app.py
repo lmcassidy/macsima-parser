@@ -29,10 +29,23 @@ def get_user_friendly_error_message(exception, filename):
     
     # Check exception type first for more accurate detection
     if exception_type == 'JSONDecodeError' or 'json' in error_str and ('decode' in error_str or 'parse' in error_str or 'expecting' in error_str):
-        return f"The file '{filename}' is not valid JSON. Please check that the file contains properly formatted JSON data."
+        return f"The file '{filename}' is not valid JSON. Please check that the file contains properly formatted JSON data with correct syntax (matching braces, commas, quotes)."
     
     elif exception_type == 'KeyError' or 'key' in error_str and ('error' in error_str or 'missing' in error_str):
-        return f"The JSON file '{filename}' is missing required data fields. Please ensure your file contains all necessary experiment data."
+        # Try to determine which field is missing
+        missing_field = str(exception).strip("'\"")
+        if 'experiments' in missing_field:
+            return f"The JSON file '{filename}' is missing the required 'experiments' field. Your JSON must contain an 'experiments' array with experiment data."
+        elif 'procedures' in missing_field:
+            return f"The JSON file '{filename}' is missing the required 'procedures' field. Your JSON must contain a 'procedures' array with processing steps."
+        elif 'racks' in missing_field:
+            return f"The JSON file '{filename}' is missing the required 'racks' field. Your JSON must contain a 'racks' array with rack information."
+        elif 'rois' in missing_field:
+            return f"The JSON file '{filename}' is missing the required 'rois' field. Your JSON must contain an 'rois' array with region of interest data."
+        elif 'samples' in missing_field:
+            return f"The JSON file '{filename}' is missing the required 'samples' field. Your JSON must contain a 'samples' array with sample information."
+        else:
+            return f"The JSON file '{filename}' is missing required data fields. Your JSON must contain these top-level fields: 'experiments', 'procedures', 'racks', 'rois', and 'samples'."
     
     elif 'memory' in error_str or 'size' in error_str:
         return f"The file '{filename}' is too large or complex to process. Please try with a smaller file or contact support."
@@ -43,9 +56,15 @@ def get_user_friendly_error_message(exception, filename):
     elif 'timeout' in error_str:
         return f"Processing '{filename}' took too long and timed out. Please try with a smaller file."
     
+    elif 'isoformat' in error_str or 'date' in error_str:
+        return f"The file '{filename}' contains invalid date/time formats. Please ensure all datetime fields use ISO format (e.g., '2025-01-01T10:00:00Z')."
+    
+    elif 'attribute' in error_str and 'get' in error_str:
+        return f"The file '{filename}' has incorrect data types or structure. Please verify that objects contain the expected fields and data types."
+    
     else:
         # For unknown errors, provide a generic but helpful message
-        return f"An unexpected error occurred while processing '{filename}'. The file may be corrupted or in an unsupported format."
+        return f"An unexpected error occurred while processing '{filename}'. The file may be corrupted or in an unsupported format. Please check the JSON structure and data types."
 
 def process_json_to_excel(json_file_path):
     """Process JSON file and return Excel file path"""
