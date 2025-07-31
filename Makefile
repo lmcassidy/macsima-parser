@@ -40,9 +40,10 @@ run-all-samples: check-deps ## Process all JSON files in data/ directory
 # Web interface
 frontend: check-deps ## Start the Flask web UI locally
 	@echo "🚀 Starting MACSima Parser web interface..."
-	@echo "🌐 Open http://localhost:5000 in your browser"
+	@echo "🌐 Open http://localhost:5001 in your browser"
 	@echo "⏹️  Press Ctrl+C to stop"
-	python app.py
+	@echo "ℹ️  Using port 5001 to avoid conflicts with AirPlay Receiver"
+	python -c "import app; app.app.run(debug=True, host='0.0.0.0', port=5001)"
 
 frontend-prod: check-deps ## Start Flask web UI in production mode with gunicorn
 	@echo "🚀 Starting MACSima Parser web interface (production)..."
