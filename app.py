@@ -145,8 +145,19 @@ def upload_file():
             
             # Provide user-friendly error messages
             error_message = get_user_friendly_error_message(e, file.filename)
-            flash(error_message)
-            return redirect(url_for('index'))
+            logger.error(f"Processing error for {file.filename}: {str(e)}")
+            
+            # Check if this is an AJAX request (from fetch)
+            if request.headers.get('Content-Type', '').startswith('multipart/form-data'):
+                # Return JSON error response for AJAX requests
+                return jsonify({
+                    'error': True,
+                    'message': error_message
+                }), 400
+            else:
+                # Traditional form submission - use flash messages
+                flash(error_message)
+                return redirect(url_for('index'))
     else:
         flash('Invalid file type. Please upload a JSON file.')
         return redirect(url_for('index'))
