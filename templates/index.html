@@ -337,6 +337,30 @@
             fileInput.value = '';
         }
         
+        function showClientError(errorMessage) {
+            // Remove any existing client error messages
+            const existingError = document.getElementById('clientError');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Create error message element
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'clientError';
+            errorDiv.className = 'flash-error';
+            errorDiv.innerHTML = `
+                <div class="error-message">${errorMessage}</div>
+                <a href="#" class="error-report-link" onclick="reportError('${errorMessage.replace(/'/g, "\\'")}')">
+                    📋 Report this error
+                </a>
+            `;
+            
+            // Insert before the form
+            const container = document.querySelector('.container');
+            const form = document.getElementById('uploadForm');
+            container.insertBefore(errorDiv, form);
+        }
+        
         function reportError(errorMessage) {
             const issueTitle = encodeURIComponent('UI Error: Processing failed');
             const issueBody = encodeURIComponent(`## Error Description
