@@ -22,6 +22,29 @@ ALLOWED_EXTENSIONS = {'json'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_user_friendly_error_message(exception, filename):
+    """Convert technical exceptions into user-friendly error messages"""
+    error_str = str(exception).lower()
+    
+    if 'json' in error_str and ('decode' in error_str or 'parse' in error_str):
+        return f"The file '{filename}' is not valid JSON. Please check that the file contains properly formatted JSON data."
+    
+    elif 'key' in error_str and ('error' in error_str or 'missing' in error_str):
+        return f"The JSON file '{filename}' is missing required data fields. Please ensure your file contains all necessary experiment data."
+    
+    elif 'memory' in error_str or 'size' in error_str:
+        return f"The file '{filename}' is too large or complex to process. Please try with a smaller file or contact support."
+    
+    elif 'permission' in error_str or 'access' in error_str:
+        return "Unable to process the file due to system permissions. Please try again or contact support."
+    
+    elif 'timeout' in error_str:
+        return f"Processing '{filename}' took too long and timed out. Please try with a smaller file."
+    
+    else:
+        # For unknown errors, provide a generic but helpful message
+        return f"An unexpected error occurred while processing '{filename}'. The file may be corrupted or in an unsupported format."
+
 def process_json_to_excel(json_file_path):
     """Process JSON file and return Excel file path"""
     logger.info(f"Processing JSON file: {json_file_path}")
