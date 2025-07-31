@@ -347,15 +347,11 @@
                 body: formData
             })
             .then(response => {
-                console.log('Response status:', response.status);
-                console.log('Response content-type:', response.headers.get('content-type'));
-                
                 if (response.ok) {
                     // Check if response is JSON (error) or blob (success)
                     const contentType = response.headers.get('content-type');
                     if (contentType && contentType.includes('application/json')) {
                         return response.json().then(data => {
-                            console.log('Success JSON response:', data);
                             throw new Error(data.message || 'Processing failed');
                         });
                     } else {
@@ -364,9 +360,7 @@
                 } else {
                     // Parse error response as JSON
                     return response.json().then(data => {
-                        console.log('Error JSON response:', data);
-                        console.log('Error message:', data.message);
-                        // Don't catch this error - let it bubble up with the detailed message
+                        // Throw error with detailed message
                         throw new Error(data.message || 'Upload failed');
                     });
                 }
