@@ -25,11 +25,13 @@ def allowed_file(filename):
 def get_user_friendly_error_message(exception, filename):
     """Convert technical exceptions into user-friendly error messages"""
     error_str = str(exception).lower()
+    exception_type = type(exception).__name__
     
-    if 'json' in error_str and ('decode' in error_str or 'parse' in error_str):
+    # Check exception type first for more accurate detection
+    if exception_type == 'JSONDecodeError' or 'json' in error_str and ('decode' in error_str or 'parse' in error_str or 'expecting' in error_str):
         return f"The file '{filename}' is not valid JSON. Please check that the file contains properly formatted JSON data."
     
-    elif 'key' in error_str and ('error' in error_str or 'missing' in error_str):
+    elif exception_type == 'KeyError' or 'key' in error_str and ('error' in error_str or 'missing' in error_str):
         return f"The JSON file '{filename}' is missing required data fields. Please ensure your file contains all necessary experiment data."
     
     elif 'memory' in error_str or 'size' in error_str:
