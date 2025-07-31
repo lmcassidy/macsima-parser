@@ -1307,7 +1307,8 @@ def test_malformed_roi_data():
 def test_get_user_friendly_error_message():
     """Test the user-friendly error message function from the Flask app"""
     import sys
-    sys.path.append('..')
+    import os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
     from app import get_user_friendly_error_message
     
     # Test JSON parsing error
