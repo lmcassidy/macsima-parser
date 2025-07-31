@@ -317,14 +317,12 @@
                         return response.blob();
                     }
                 } else {
-                    // Try to parse error response as JSON
+                    // Parse error response as JSON
                     return response.json().then(data => {
                         console.log('Error JSON response:', data);
                         console.log('Error message:', data.message);
+                        // Don't catch this error - let it bubble up with the detailed message
                         throw new Error(data.message || 'Upload failed');
-                    }).catch(jsonError => {
-                        console.log('Failed to parse error JSON:', jsonError);
-                        throw new Error('Upload failed');
                     });
                 }
             })
