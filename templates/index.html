@@ -418,31 +418,17 @@
         }
         
         function reportError(errorMessage) {
-            const issueTitle = encodeURIComponent('UI Error: Processing failed');
-            const issueBody = encodeURIComponent(`## Error Description
-I encountered an error while using the MACSima Parser web interface.
-
-**Error Message:**
-\`\`\`
+            const issueTitle = encodeURIComponent('MACSima Parser Error');
+            const issueBody = encodeURIComponent(`**Error Message:**
 ${errorMessage}
-\`\`\`
 
-**Steps to Reproduce:**
-1. Uploaded a JSON file to the web interface
-2. Clicked "Convert" button
-3. Received the error message above
+**Please attach:**
+- Your JSON file (if you're comfortable sharing it)
+- Screenshot of the error
+- Any other relevant information
 
-**Expected Behavior:**
-The file should be processed successfully and an Excel file should be downloaded.
-
-**Actual Behavior:**
-An error occurred during processing.
-
-**Additional Information:**
-- Browser: ${navigator.userAgent}
-- Timestamp: ${new Date().toISOString()}
-
-Please let me know if you need any additional information to help resolve this issue.`);
+**Browser:** ${navigator.userAgent}
+**Timestamp:** ${new Date().toISOString()}`);
             
             const githubUrl = `https://github.com/lmcassidy/macsima_data_processing/issues/new?title=${issueTitle}&body=${issueBody}`;
             window.open(githubUrl, '_blank');
