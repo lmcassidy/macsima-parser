@@ -303,9 +303,22 @@
             })
             .then(response => {
                 if (response.ok) {
-                    return response.blob();
+                    // Check if response is JSON (error) or blob (success)
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Processing failed');
+                        });
+                    } else {
+                        return response.blob();
+                    }
                 } else {
-                    throw new Error('Upload failed');
+                    // Try to parse error response as JSON
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Upload failed');
+                    }).catch(() => {
+                        throw new Error('Upload failed');
+                    });
                 }
             })
             .then(blob => {
@@ -324,7 +337,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                showClientError('Error processing file. Please try again.');
+                showClientError(error.message || 'Error processing file. Please try again.');
                 resetForm();
             });
         });
