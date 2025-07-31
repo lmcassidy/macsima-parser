@@ -191,7 +191,12 @@
             {% if messages %}
                 <div class="flash-messages">
                     {% for message in messages %}
-                        <div class="flash-error">{{ message }}</div>
+                        <div class="flash-error">
+                            <div class="error-message">{{ message }}</div>
+                            <a href="#" class="error-report-link" onclick="reportError('{{ message|e }}')">
+                                📋 Report this error
+                            </a>
+                        </div>
                     {% endfor %}
                 </div>
             {% endif %}
